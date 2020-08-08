@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Repositories\PostRepositoryInterface;
+use Mockery;
 use Tests\TestCase;
 
 class PostControllerTest extends TestCase
@@ -23,23 +25,63 @@ class PostControllerTest extends TestCase
      *
      * @return void
      */
-    public function testCreateIsNotImplemented()
+    public function testCreate()
     {
         $response = $this->get('/posts/create');
 
-        $response->assertStatus(501);
+        $response->assertStatus(200);
     }
 
     /**
-     * Test store method is not implemented
+     * Test that the store method can create a Post and return success
      *
      * @return void
      */
-    public function testStoreIsNotImplemented()
+    public function testStoreCanCreateNewPost()
     {
-        $response = $this->get('/posts/store');
+        // Setup
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
+            $mock->shouldReceive('create')
+                ->with('title1', 'content1', 'human-readable-url1')
+                ->andReturn(true);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
 
-        $response->assertStatus(501);
+        // Execute
+        $response = $this->post('/posts', [
+            'title' => 'title1',
+            'content' => 'content1',
+            'human_readable_url' => 'human-readable-url1'
+        ]);
+
+        // Assert
+        $response->assertStatus(204);
+    }
+
+    /**
+     * Test that the store method can handle an error when creating a Post
+     *
+     * @return void
+     */
+    public function testStoreCanHandlePostCreationError()
+    {
+        // Setup
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
+            $mock->shouldReceive('create')
+                ->with('title1', 'content1', 'human-readable-url1')
+                ->andReturn(false);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
+
+        // Execute
+        $response = $this->post('/posts', [
+            'title' => 'title1',
+            'content' => 'content1',
+            'human_readable_url' => 'human-readable-url1'
+        ]);
+
+        // Assert
+        $response->assertStatus(500);
     }
 
     /**

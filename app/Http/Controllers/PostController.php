@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Post;
 use App\Repositories\PostRepositoryInterface;
 use Illuminate\Http\Request;
 
@@ -42,7 +41,7 @@ class PostController extends Controller
      */
     public function create()
     {
-        return response('Not implemented', 501);
+        return response()->view('posts.create');
     }
 
     /**
@@ -53,7 +52,16 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        return response('Not implemented', 501);
+        $result = $this->repository->create(
+            $request->input('title'),
+            $request->input('content'),
+            $request->input('human_readable_url')
+        );
+        if ($result) {
+            return response('Success', 204);
+        } else {
+            return response('Server error', 500);
+        }
     }
 
     /**

@@ -32,4 +32,20 @@ class EloquentPostRepository implements PostRepositoryInterface
     {
         return $this->model->all();
     }
+
+    /**
+     * Creates a new Post with the specified parameters
+     *
+     * @param string $title
+     * @param string $content
+     * @param string $humanReadableUrl
+     * @return bool
+     */
+    public function create(string $title, string $content, string $humanReadableUrl)
+    {
+        $this->model->title = $title;
+        $this->model->content = $content;
+        $this->model->human_readable_url = $humanReadableUrl;
+        return $this->model->save();
+    }
 }

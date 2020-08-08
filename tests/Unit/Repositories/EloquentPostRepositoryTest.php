@@ -32,4 +32,35 @@ class EloquentPostRepositoryTest extends TestCase
         // Assert
         $this->assertEquals($expected, $result);
     }
+
+    /**
+     * Tests that the repository can create a Post
+     *
+     * @return void
+     */
+    public function testCreate()
+    {
+        // Setup
+        $expected = true;
+        $post = Mockery::mock(Post::class, function ($mock) use ($expected) {
+            $mock->shouldReceive('setAttribute')
+                ->with('title', 'title1')
+                ->times(1);
+            $mock->shouldReceive('setAttribute')
+                ->with('content', 'content1')
+                ->times(1);
+            $mock->shouldReceive('setAttribute')
+                ->with('human_readable_url', 'human-readable-url1')
+                ->times(1);
+            $mock->shouldReceive('save')
+                ->andReturn($expected);
+        });
+        $repo = new EloquentPostRepository($post);
+
+        // Execute
+        $result = $repo->create("title1", "content1", "human-readable-url1");
+
+        // Assert
+        $this->assertEquals($expected, $result);
+    }
 }

@@ -16,6 +16,14 @@ interface PostRepositoryInterface
     public function getAll();
 
     /**
+     * Should return a Post by the specified ID
+     *
+     * @param $id
+     * @return Post
+     */
+    public function getById($id);
+
+    /**
      * Should create a new Post
      *
      * @param string $title

@@ -12,7 +12,7 @@
     @foreach($posts as $post)
         <tr>
             <td>{{ $post->id }}</td>
-            <td>{{ $post->title }}</td>
+            <td><a href="/posts/{{ $post->id }}">{{ $post->title }}</a></td>
             <td>{{ $post->content }}</td>
             <td>{{ $post->created_at }}</td>
             <td>{{ $post->updated_at }}</td>

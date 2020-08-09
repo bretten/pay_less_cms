@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Post;
 use App\Repositories\PostRepositoryInterface;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Mockery;
 use Tests\TestCase;
 
@@ -85,15 +88,56 @@ class PostControllerTest extends TestCase
     }
 
     /**
-     * Test show method is not implemented
+     * Test show method can display a single Post
+     *
+     * @return void
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     */
+    public function testShow()
+    {
+        // Setup
+        $expectedPost = new Post;
+        $expectedPost->id = 7;
+        $expectedPost->title = 'Post title';
+        $expectedPost->content = 'Post content';
+
+        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.show', ['post' => $expectedPost]);
+
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($expectedPost) {
+            $mock->shouldReceive('getById')
+                ->with(7)
+                ->andReturn($expectedPost);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
+
+        // Execute
+        $response = $this->get('/posts/7');
+
+        // Assert
+        $response->assertStatus(200);
+        $this->assertEquals($expectedResponse->content(), $response->baseResponse->content());
+    }
+
+    /**
+     * Test show method returns a 404 when trying to show a Post with an invalid ID
      *
      * @return void
      */
-    public function testShowIsNotImplemented()
+    public function testShowReturns404WhenTryingToShowAPostWithAnInvalidId()
     {
-        $response = $this->get('/posts/show');
+        // Setup
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
+            $mock->shouldReceive('getById')
+                ->with(7)
+                ->andThrow(new ModelNotFoundException);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
 
-        $response->assertStatus(501);
+        // Execute
+        $response = $this->get('/posts/7');
+
+        // Assert
+        $response->assertStatus(404);
     }
 
     /**

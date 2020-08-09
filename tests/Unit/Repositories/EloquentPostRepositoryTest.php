@@ -6,6 +6,7 @@ namespace Repositories;
 
 use App\Post;
 use App\Repositories\EloquentPostRepository;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 
@@ -31,6 +32,52 @@ class EloquentPostRepositoryTest extends TestCase
 
         // Assert
         $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Tests that the repository can get a Post by ID
+     *
+     * @return void
+     */
+    public function testGetById()
+    {
+        // Setup
+        $expected = ['Post7'];
+        $post = Mockery::mock(Post::class, function ($mock) use ($expected) {
+            $mock->shouldReceive('findOrFail')
+                ->with(7)
+                ->andReturn($expected);
+        });
+        $repo = new EloquentPostRepository($post);
+
+        // Execute
+        $result = $repo->getById(7);
+
+        // Assert
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Tests that the repository throws a Not Found exception when trying to
+     * retrieve a Post by an invalid ID
+     *
+     * @return void
+     */
+    public function testGetByIdThrowsNotFoundExceptionWhenPassedInvalidId()
+    {
+        $this->markTestIncomplete("Test not useful until data source can be mocked");
+
+        // Setup
+        $post = Mockery::mock(Post::class, function ($mock) {
+            $mock->shouldReceive('findOrFail')
+                ->with(7)
+                ->andThrow(new ModelNotFoundException);
+        });
+        $repo = new EloquentPostRepository($post);
+
+        // Execute and Assert
+        $this->expectException(ModelNotFoundException::class);
+        $repo->getById(7);
     }
 
     /**

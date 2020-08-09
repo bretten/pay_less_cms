@@ -72,7 +72,9 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        return response('Not implemented', 501);
+        $post = $this->repository->getById($id);
+
+        return response()->view('posts.show', ['post' => $post]);
     }
 
     /**

@@ -34,6 +34,17 @@ class EloquentPostRepository implements PostRepositoryInterface
     }
 
     /**
+     * Returns the Post specified by the ID
+     *
+     * @param $id
+     * @return Post
+     */
+    public function getById($id)
+    {
+        return $this->model->findOrFail($id);
+    }
+
+    /**
      * Creates a new Post with the specified parameters
      *
      * @param string $title

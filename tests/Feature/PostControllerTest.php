@@ -105,7 +105,7 @@ class PostControllerTest extends TestCase
     {
         $response = $this->get('/posts/edit');
 
-        $response->assertStatus(501);
+        $response->assertStatus(500);
     }
 
     /**
@@ -117,7 +117,7 @@ class PostControllerTest extends TestCase
     {
         $response = $this->get('/posts/update');
 
-        $response->assertStatus(501);
+        $response->assertStatus(500);
     }
 
     /**
@@ -129,6 +129,6 @@ class PostControllerTest extends TestCase
     {
         $response = $this->get('/posts/destroy');
 
-        $response->assertStatus(501);
+        $response->assertStatus(500);
     }
 }

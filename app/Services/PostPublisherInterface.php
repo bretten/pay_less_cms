@@ -10,7 +10,7 @@ interface PostPublisherInterface
      * Should publish all specified Posts
      *
      * @param iterable $posts
-     * @return mixed
+     * @return bool
      */
     public function publish(iterable $posts);
 }

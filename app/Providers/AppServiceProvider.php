@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Repositories\EloquentPostRepository;
 use App\Repositories\PostRepositoryInterface;
+use App\Services\FilesystemPostPublisher;
+use App\Services\PostPublisherInterface;
 use Aws\S3\S3Client;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\AwsS3v3\AwsS3Adapter;
@@ -35,6 +37,9 @@ class AppServiceProvider extends ServiceProvider
             $adapter = new AwsS3Adapter($client, $app['config']['filesystems.disks.s3.bucket']);
             return new Filesystem($adapter);
         });
+
+        // Publishers
+        $this->app->bind(PostPublisherInterface::class, FilesystemPostPublisher::class);
     }
 
     /**

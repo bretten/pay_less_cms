@@ -1,31 +1,33 @@
-<html>
-<body>
+@extends('layouts.app')
 
-<h1>Create a post</h1>
+@section('page-title', 'Pay Less CMS')
 
-<form method="POST" action="/posts">
-    @csrf
+@section('page-description', 'A simple CMS for static sites')
 
-    <label for="post-title">Title</label>
-    <input type="text" id="post-title" name="title">
+@section('page-header', 'Create a Post')
 
-    <br>
-    <br>
+@section('content')
+    <div class="container-fluid">
+        <form method="POST" action="/posts">
+            @csrf
 
-    <label for="post-content">Content</label>
-    <textarea id="post-content" name="content"></textarea>
+            <div class="form-group">
+                <label for="post-title">Title</label>
+                <input type="text" class="form-control" id="post-title" name="title">
+            </div>
 
-    <br>
-    <br>
+            <div class="form-group">
+                <label for="post-content">Content</label>
+                <textarea class="form-control" id="post-content" name="content" rows="10"></textarea>
+            </div>
 
-    <label for="post-human-readable-url">Human Readable URL</label>
-    <input type="text" id="post-human-readable-url" name="human_readable_url">
+            <div class="form-group">
+                <label for="post-human-readable-url">Human Readable URL</label>
+                <input type="text" class="form-control" id="post-human-readable-url" name="human_readable_url">
+            </div>
 
-    <br>
-    <br>
-
-    <button type="submit">Submit</button>
-</form>
-
-</body>
-</html>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a class="btn btn-light" href="/posts" role="button">Cancel</a>
+        </form>
+    </div>
+@endsection

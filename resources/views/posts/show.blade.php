@@ -1,7 +1,11 @@
-@extends('layouts.app')
+<html lang="en">
 
-@section('title', 'Pay Less CMS')
+<head>
+    <title>{{ $post->title }}</title>
+</head>
 
-@section('post-title', $post->title)
+<body>
+{!! $post->content !!}
+</body>
 
-@section('post-content', $post->content)
+</html>

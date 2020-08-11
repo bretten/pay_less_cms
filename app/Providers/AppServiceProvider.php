@@ -8,6 +8,8 @@ use App\Services\FilesystemPostPublisher;
 use App\Services\PostPublisherInterface;
 use Aws\S3\S3Client;
 use Illuminate\Support\ServiceProvider;
+use League\CommonMark\CommonMarkConverter;
+use League\CommonMark\MarkdownConverterInterface;
 use League\Flysystem\AwsS3v3\AwsS3Adapter;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
@@ -40,6 +42,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Publishers
         $this->app->bind(PostPublisherInterface::class, FilesystemPostPublisher::class);
+
+        // Markdown
+        $this->app->bind(MarkdownConverterInterface::class, CommonMarkConverter::class);
     }
 
     /**

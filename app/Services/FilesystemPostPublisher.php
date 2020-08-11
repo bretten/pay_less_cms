@@ -5,14 +5,15 @@ namespace App\Services;
 
 
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
+use League\CommonMark\MarkdownConverterInterface;
 use League\Flysystem\FilesystemInterface;
 
 class FilesystemPostPublisher implements PostPublisherInterface
 {
     /**
-     * @var FilesystemInterface
+     * @var MarkdownConverterInterface
      */
-    private $filesystem;
+    private $markdownConverter;
 
     /**
      * @var ViewFactoryContract
@@ -20,15 +21,22 @@ class FilesystemPostPublisher implements PostPublisherInterface
     private $viewFactory;
 
     /**
+     * @var FilesystemInterface
+     */
+    private $filesystem;
+
+    /**
      * Constructor
      *
-     * @param FilesystemInterface $filesystem
+     * @param MarkdownConverterInterface $markdownConverter
      * @param ViewFactoryContract $viewFactory
+     * @param FilesystemInterface $filesystem
      */
-    public function __construct(FilesystemInterface $filesystem, ViewFactoryContract $viewFactory)
+    public function __construct(MarkdownConverterInterface $markdownConverter, ViewFactoryContract $viewFactory, FilesystemInterface $filesystem)
     {
-        $this->filesystem = $filesystem;
+        $this->markdownConverter = $markdownConverter;
         $this->viewFactory = $viewFactory;
+        $this->filesystem = $filesystem;
     }
 
     /**
@@ -42,6 +50,7 @@ class FilesystemPostPublisher implements PostPublisherInterface
         $success = true;
 
         foreach ($posts as $post) {
+            $post->content = $this->markdownConverter->convertToHtml($post->content);
             $result = $this->filesystem->put($post->human_readable_url, $this->viewFactory->make('posts.show', ['post' => $post]));
 
             if ($result == false) {

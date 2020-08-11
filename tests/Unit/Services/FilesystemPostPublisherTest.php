@@ -6,6 +6,7 @@ namespace Services;
 
 use App\Services\FilesystemPostPublisher;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
+use League\CommonMark\MarkdownConverterInterface;
 use League\Flysystem\FilesystemInterface;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -29,27 +30,38 @@ class FilesystemPostPublisherTest extends TestCase
         $posts = [
             $post1, $post2
         ];
-        $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
-            $mock->shouldReceive('put')
-                ->with('url1', 'content1 rendered in view')
+
+        $markdownConverter = Mockery::mock(MarkdownConverterInterface::class, function ($mock) use ($post1, $post2) {
+            $mock->shouldReceive('convertToHtml')
+                ->with($post1->content)
                 ->times(1)
-                ->andReturn(true);
-            $mock->shouldReceive('put')
-                ->with('url2', 'content2 rendered in view')
+                ->andReturn('content1 with markup');
+            $mock->shouldReceive('convertToHtml')
+                ->with($post2->content)
                 ->times(1)
-                ->andReturn(true);
+                ->andReturn('content2 with markup');
         });
         $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($post1, $post2) {
             $mock->shouldReceive('make')
                 ->with('posts.show', ['post' => $post1])
                 ->times(1)
-                ->andReturn('content1 rendered in view');
+                ->andReturn('content1 with markup rendered in view');
             $mock->shouldReceive('make')
                 ->with('posts.show', ['post' => $post2])
                 ->times(1)
-                ->andReturn('content2 rendered in view');
+                ->andReturn('content2 with markup rendered in view');
         });
-        $publisher = new FilesystemPostPublisher($filesystem, $viewFactory);
+        $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
+            $mock->shouldReceive('put')
+                ->with('url1', 'content1 with markup rendered in view')
+                ->times(1)
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('url2', 'content2 with markup rendered in view')
+                ->times(1)
+                ->andReturn(true);
+        });
+        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $filesystem);
 
         // Execute
         $result = $publisher->publish($posts);
@@ -75,27 +87,38 @@ class FilesystemPostPublisherTest extends TestCase
         $posts = [
             $post1, $post2
         ];
-        $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
-            $mock->shouldReceive('put')
-                ->with('url1', 'content1 rendered in view')
+
+        $markdownConverter = Mockery::mock(MarkdownConverterInterface::class, function ($mock) use ($post1, $post2) {
+            $mock->shouldReceive('convertToHtml')
+                ->with($post1->content)
                 ->times(1)
-                ->andReturn(true);
-            $mock->shouldReceive('put')
-                ->with('url2', 'content2 rendered in view')
+                ->andReturn('content1 with markup');
+            $mock->shouldReceive('convertToHtml')
+                ->with($post2->content)
                 ->times(1)
-                ->andReturn(false); // Failed
+                ->andReturn('content2 with markup');
         });
         $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($post1, $post2) {
             $mock->shouldReceive('make')
                 ->with('posts.show', ['post' => $post1])
                 ->times(1)
-                ->andReturn('content1 rendered in view');
+                ->andReturn('content1 with markup rendered in view');
             $mock->shouldReceive('make')
                 ->with('posts.show', ['post' => $post2])
                 ->times(1)
-                ->andReturn('content2 rendered in view');
+                ->andReturn('content2 with markup rendered in view');
         });
-        $publisher = new FilesystemPostPublisher($filesystem, $viewFactory);
+        $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
+            $mock->shouldReceive('put')
+                ->with('url1', 'content1 with markup rendered in view')
+                ->times(1)
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('url2', 'content2 with markup rendered in view')
+                ->times(1)
+                ->andReturn(false); // Failed
+        });
+        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $filesystem);
 
         // Execute
         $result = $publisher->publish($posts);

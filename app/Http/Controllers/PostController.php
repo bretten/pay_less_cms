@@ -48,7 +48,7 @@ class PostController extends Controller
      * Store a newly created resource in storage.
      *
      * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Routing\Redirector
      */
     public function store(Request $request)
     {
@@ -58,7 +58,7 @@ class PostController extends Controller
             $request->input('human_readable_url')
         );
         if ($result) {
-            return response('Success', 204);
+            return redirect('/posts');
         } else {
             return response('Server error', 500);
         }

@@ -58,7 +58,7 @@ class PostControllerTest extends TestCase
         ]);
 
         // Assert
-        $response->assertStatus(204);
+        $response->assertRedirect('/posts');
     }
 
     /**

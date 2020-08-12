@@ -96,10 +96,20 @@ class PostControllerTest extends TestCase
     public function testShow()
     {
         // Setup
-        $expectedPost = new Post;
-        $expectedPost->id = 7;
-        $expectedPost->title = 'Post title';
-        $expectedPost->content = 'Post content';
+        $expectedPost = Mockery::mock(Post::class, function ($mock) {
+            $mock->shouldReceive('getAttribute')
+                ->with('id')
+                ->andReturn(7);
+            $mock->shouldReceive('getAttribute')
+                ->with('title')
+                ->andReturn('Post title');
+            $mock->shouldReceive('getAttribute')
+                ->with('content')
+                ->andReturn('Post content');
+            $mock->shouldReceive('getAttribute')
+                ->with('human_readable_url')
+                ->andReturn('url1');
+        });
 
         $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.show', ['post' => $expectedPost]);
 

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Repositories;
+namespace Tests\Unit\Repositories;
 
 
 use App\Post;

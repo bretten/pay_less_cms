@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Services;
+namespace Tests\Unit\Services;
 
 
 use App\Services\FilesystemPostPublisher;

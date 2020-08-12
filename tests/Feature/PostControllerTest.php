@@ -151,26 +151,117 @@ class PostControllerTest extends TestCase
     }
 
     /**
-     * Test edit method is not implemented
+     * Test that the edit method shows the edit form for an existing Post
      *
      * @return void
      */
-    public function testEditIsNotImplemented()
+    public function testEdit()
     {
-        $response = $this->get('/posts/edit');
+        // Setup
+        $expectedPost = Mockery::mock(Post::class, function ($mock) {
+            $mock->shouldReceive('getAttribute')
+                ->with('id')
+                ->andReturn(1);
+            $mock->shouldReceive('getAttribute')
+                ->with('title')
+                ->andReturn('Post title1');
+            $mock->shouldReceive('getAttribute')
+                ->with('content')
+                ->andReturn('Post content1');
+            $mock->shouldReceive('getAttribute')
+                ->with('human_readable_url')
+                ->andReturn('url1');
+        });
 
-        $response->assertStatus(500);
+        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.edit', ['post' => $expectedPost]);
+
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($expectedPost) {
+            $mock->shouldReceive('getById')
+                ->with(1)
+                ->andReturn($expectedPost);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
+
+        // Execute
+        $response = $this->get('/posts/1/edit');
+
+        // Assert
+        $response->assertStatus(200);
+        $actualContentWithCsrfRemoved = preg_replace('/<input type="hidden" name="_token" value="(.*?)">/', '<input type="hidden" name="_token" value="">', $response->baseResponse->content());
+        $this->assertEquals($expectedResponse->content(), $actualContentWithCsrfRemoved);
     }
 
     /**
-     * Test update method is not implemented
+     * Test edit method returns a 404 when trying to edit a Post with an invalid ID
      *
      * @return void
      */
-    public function testUpdateIsNotImplemented()
+    public function testEditReturns404WhenTryingToEditAPostWithAnInvalidId()
     {
-        $response = $this->get('/posts/update');
+        // Setup
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
+            $mock->shouldReceive('getById')
+                ->with(1)
+                ->andThrow(new ModelNotFoundException);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
 
+        // Execute
+        $response = $this->get('/posts/1/edit');
+
+        // Assert
+        $response->assertStatus(404);
+    }
+
+    /**
+     * Test that the update method can update a Post and return success
+     *
+     * @return void
+     */
+    public function testUpdateCanUpdateExistingPost()
+    {
+        // Setup
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
+            $mock->shouldReceive('update')
+                ->with(1, 'title1 v2', 'content1 v2', 'human-readable-url1-v2')
+                ->andReturn(true);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
+
+        // Execute
+        $response = $this->put('/posts/1', [
+            'title' => 'title1 v2',
+            'content' => 'content1 v2',
+            'human_readable_url' => 'human-readable-url1-v2'
+        ]);
+
+        // Assert
+        $response->assertRedirect('/posts');
+    }
+
+    /**
+     * Test that the update method can handle an error when trying to update a Post
+     *
+     * @return void
+     */
+    public function testUpdateCanHandleError()
+    {
+        // Setup
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
+            $mock->shouldReceive('update')
+                ->with('title1 v2', 'content1 v2', 'human-readable-url1-v2')
+                ->andReturn(false);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
+
+        // Execute
+        $response = $this->put('/posts/1', [
+            'title' => 'title1 v2',
+            'content' => 'content1 v2',
+            'human_readable_url' => 'human-readable-url1-v2'
+        ]);
+
+        // Assert
         $response->assertStatus(500);
     }
 

@@ -85,7 +85,9 @@ class PostController extends Controller
      */
     public function edit($id)
     {
-        return response('Not implemented', 501);
+        $post = $this->repository->getById($id);
+
+        return response()->view('posts.edit', ['post' => $post]);
     }
 
     /**
@@ -93,11 +95,21 @@ class PostController extends Controller
      *
      * @param \Illuminate\Http\Request $request
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Routing\Redirector
      */
     public function update(Request $request, $id)
     {
-        return response('Not implemented', 501);
+        $result = $this->repository->update(
+            $id,
+            $request->input('title'),
+            $request->input('content'),
+            $request->input('human_readable_url')
+        );
+        if ($result) {
+            return redirect('/posts');
+        } else {
+            return response('Server error', 500);
+        }
     }
 
     /**

@@ -32,4 +32,15 @@ interface PostRepositoryInterface
      * @return bool
      */
     public function create(string $title, string $content, string $humanReadableUrl);
+
+    /**
+     * Should update a Post
+     *
+     * @param $id
+     * @param string $title
+     * @param string $content
+     * @param string $humanReadableUrl
+     * @return bool
+     */
+    public function update($id, string $title, string $content, string $humanReadableUrl);
 }

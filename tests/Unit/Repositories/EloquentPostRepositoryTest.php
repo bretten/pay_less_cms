@@ -110,4 +110,40 @@ class EloquentPostRepositoryTest extends TestCase
         // Assert
         $this->assertEquals($expected, $result);
     }
+
+    /**
+     * Tests that the repository can edit a Post
+     *
+     * @return void
+     */
+    public function testEdit()
+    {
+        // Setup
+        $id = 1;
+        $expected = true;
+        $post = Mockery::mock(Post::class, function ($mock) use ($id, $expected) {
+            $mock->shouldReceive('find')
+                ->with($id)
+                ->times(1)
+                ->andReturn($mock);
+            $mock->shouldReceive('setAttribute')
+                ->with('title', 'title1 v2')
+                ->times(1);
+            $mock->shouldReceive('setAttribute')
+                ->with('content', 'content1 v2')
+                ->times(1);
+            $mock->shouldReceive('setAttribute')
+                ->with('human_readable_url', 'human-readable-url1-v2')
+                ->times(1);
+            $mock->shouldReceive('save')
+                ->andReturn($expected);
+        });
+        $repo = new EloquentPostRepository($post);
+
+        // Execute
+        $result = $repo->update($id, "title1 v2", "content1 v2", "human-readable-url1-v2");
+
+        // Assert
+        $this->assertEquals($expected, $result);
+    }
 }

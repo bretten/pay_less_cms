@@ -59,4 +59,22 @@ class EloquentPostRepository implements PostRepositoryInterface
         $this->model->human_readable_url = $humanReadableUrl;
         return $this->model->save();
     }
+
+    /**
+     * Updates the Post indicated by the ID with the new parameters
+     *
+     * @param $id
+     * @param string $title
+     * @param string $content
+     * @param string $humanReadableUrl
+     * @return bool
+     */
+    public function update($id, string $title, string $content, string $humanReadableUrl)
+    {
+        $this->model = $this->model->find($id);
+        $this->model->title = $title;
+        $this->model->content = $content;
+        $this->model->human_readable_url = $humanReadableUrl;
+        return $this->model->save();
+    }
 }

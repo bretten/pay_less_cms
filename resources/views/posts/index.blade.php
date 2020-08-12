@@ -19,6 +19,7 @@
                 <th>Content</th>
                 <th>Created At</th>
                 <th>Updated At</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -29,6 +30,7 @@
                     <td>{{ $post->content }}</td>
                     <td>{{ $post->created_at }}</td>
                     <td>{{ $post->updated_at }}</td>
+                    <td><a class="btn btn-light" href="/posts/{{ $post->id }}/edit" role="button">Edit</a></td>
                 </tr>
             @endforeach
             </tbody>

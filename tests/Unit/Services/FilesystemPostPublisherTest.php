@@ -62,6 +62,10 @@ class FilesystemPostPublisherTest extends TestCase
             $mock->shouldReceive('make')
                 ->with('posts.published.show', ['post' => $post3])
                 ->times(0);
+            $mock->shouldReceive('make')
+                ->with('posts.published.list', ['posts' => [$post1, $post2]])
+                ->times(1)
+                ->andReturn('posts list rendered in view');
         });
         $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
             $mock->shouldReceive('put')
@@ -77,6 +81,10 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(0);
             $mock->shouldReceive('delete')
                 ->with('url3')
+                ->times(1)
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('index.html', 'posts list rendered in view')
                 ->times(1)
                 ->andReturn(true);
         });
@@ -128,6 +136,10 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with('posts.published.show', ['post' => $post2])
                 ->times(1)
                 ->andReturn('content2 with markup rendered in view');
+            $mock->shouldReceive('make')
+                ->with('posts.published.list', ['posts' => [$post1, $post2]])
+                ->times(1)
+                ->andReturn('posts list rendered in view');
         });
         $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
             $mock->shouldReceive('put')
@@ -138,6 +150,10 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with('url2', 'content2 with markup rendered in view')
                 ->times(1)
                 ->andReturn(false); // Failed
+            $mock->shouldReceive('put')
+                ->with('index.html', 'posts list rendered in view')
+                ->times(1)
+                ->andReturn(true);
         });
         $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $filesystem);
 

@@ -50,6 +50,8 @@ class FilesystemPostPublisher implements PostPublisherInterface
     {
         $success = true;
 
+        $activePosts = [];
+
         foreach ($posts as $post) {
 
             if ($post->deleted_at) {
@@ -66,6 +68,11 @@ class FilesystemPostPublisher implements PostPublisherInterface
             if ($result == false) {
                 $success = false;
             }
+            array_push($activePosts, $post);
+        }
+
+        if (false == $this->filesystem->put('index.html', $this->viewFactory->make('posts.published.list', ['posts' => $activePosts]))) {
+            $success = false;
         }
 
         return $success;

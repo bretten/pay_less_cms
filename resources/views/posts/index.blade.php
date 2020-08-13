@@ -16,6 +16,7 @@
             <tr>
                 <th>Id</th>
                 <th>Title</th>
+                <th>Url</th>
                 <th>Content</th>
                 <th>Created At</th>
                 <th>Updated At</th>
@@ -28,6 +29,7 @@
                 <tr>
                     <th>{{ $post->id }}</th>
                     <td><a href="/posts/{{ $post->id }}">{{ $post->title }}</a></td>
+                    <td>{{ $post->human_readable_url }}</td>
                     <td>{{ $post->content }}</td>
                     <td>{{ $post->created_at }}</td>
                     <td>{{ $post->updated_at }}</td>

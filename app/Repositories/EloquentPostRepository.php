@@ -30,7 +30,7 @@ class EloquentPostRepository implements PostRepositoryInterface
      */
     public function getAll()
     {
-        return $this->model->newQuery()->orderByDesc('created_at')->withTrashed()->get();
+        return $this->model->newQuery()->withTrashed()->get();
     }
 
     /**

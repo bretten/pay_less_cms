@@ -6,6 +6,7 @@ use App\Post;
 use App\Repositories\PostRepositoryInterface;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 use Mockery;
 use Tests\TestCase;
 
@@ -18,8 +19,43 @@ class PostControllerTest extends TestCase
      */
     public function testIndex()
     {
+        // Setup
+        $post1 = new \stdClass();
+        $post1->id = 1;
+        $post1->title = 'title1';
+        $post1->content = 'content1';
+        $post1->human_readable_url = 'url1';
+        $post1->created_at = date('Y-m-d H:i:s');
+        $post1->updated_at = date('Y-m-d H:i:s');
+        $post1->deleted_at = false;
+        $post2 = new \stdClass();
+        $post2->id = 2;
+        $post2->title = 'title2';
+        $post2->content = 'content2';
+        $post2->human_readable_url = 'url2';
+        $post2->created_at = date('Y-m-d H:i:s');
+        $post2->updated_at = date('Y-m-d H:i:s');
+        $post2->deleted_at = false;
+        $posts = [
+            $post1, $post2
+        ];
+        $collection = Mockery::mock(Collection::class, function ($mock) use ($posts) {
+            $mock->shouldReceive('sortByDesc')
+                ->with('created_at')
+                ->times(1)
+                ->andReturn($posts);
+        });
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($collection) {
+            $mock->shouldReceive('getAll')
+                ->times(1)
+                ->andReturn($collection);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
+
+        // Execute
         $response = $this->get('/posts');
 
+        // Assert
         $response->assertStatus(200);
     }
 

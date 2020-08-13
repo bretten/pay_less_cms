@@ -29,7 +29,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = $this->repository->getAll();
+        $posts = $this->repository->getAll()->sortByDesc('created_at');
 
         return response()->view('posts.index', ['posts' => $posts]);
     }

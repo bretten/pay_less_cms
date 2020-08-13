@@ -10,6 +10,7 @@ use Aws\S3\S3Client;
 use Illuminate\Support\ServiceProvider;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\MarkdownConverterInterface;
+use League\Flysystem\Adapter\Local;
 use League\Flysystem\AwsS3v3\AwsS3Adapter;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
@@ -28,15 +29,22 @@ class AppServiceProvider extends ServiceProvider
 
         // Filesystem
         $this->app->bind(FilesystemInterface::class, function ($app) {
-            $client = new S3Client([
-                'credentials' => [
-                    'key' => $app['config']['filesystems.disks.s3.key'],
-                    'secret' => $app['config']['filesystems.disks.s3.secret']
-                ],
-                'region' => $app['config']['filesystems.disks.s3.region'],
-                'version' => 'latest'
-            ]);
-            $adapter = new AwsS3Adapter($client, $app['config']['filesystems.disks.s3.bucket']);
+            if ($app['config']['filesystems.default'] == 's3') {
+                // S3
+                $client = new S3Client([
+                    'credentials' => [
+                        'key' => $app['config']['filesystems.disks.s3.key'],
+                        'secret' => $app['config']['filesystems.disks.s3.secret']
+                    ],
+                    'region' => $app['config']['filesystems.disks.s3.region'],
+                    'version' => 'latest'
+                ]);
+                $adapter = new AwsS3Adapter($client, $app['config']['filesystems.disks.s3.bucket']);
+            } else {
+                // Local
+                $adapter = new Local($app['config']['filesystems.disks.local.root']);
+            }
+
             return new Filesystem($adapter);
         });
 

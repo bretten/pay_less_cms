@@ -6,6 +6,7 @@ namespace App\Services;
 
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use League\CommonMark\MarkdownConverterInterface;
+use League\Flysystem\FileNotFoundException;
 use League\Flysystem\FilesystemInterface;
 
 class FilesystemPostPublisher implements PostPublisherInterface
@@ -50,6 +51,15 @@ class FilesystemPostPublisher implements PostPublisherInterface
         $success = true;
 
         foreach ($posts as $post) {
+
+            if ($post->deleted_at) {
+                try {
+                    $this->filesystem->delete($post->human_readable_url);
+                } catch (FileNotFoundException $e) {
+                }
+                continue;
+            }
+
             $post->content = $this->markdownConverter->convertToHtml($post->content);
             $result = $this->filesystem->put($post->human_readable_url, $this->viewFactory->make('posts.show', ['post' => $post]));
 

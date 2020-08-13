@@ -6,6 +6,7 @@ namespace Tests\Unit\Repositories;
 
 use App\Post;
 use App\Repositories\EloquentPostRepository;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -21,9 +22,15 @@ class EloquentPostRepositoryTest extends TestCase
     {
         // Setup
         $expected = ['Post1', 'Post2'];
-        $post = Mockery::mock(Post::class, function ($mock) use ($expected) {
-            $mock->shouldReceive('all')
+        $builder = Mockery::mock(Builder::class, function ($mock) use ($expected) {
+            $mock->shouldReceive('withTrashed')
+                ->andReturn($mock);
+            $mock->shouldReceive('get')
                 ->andReturn($expected);
+        });
+        $post = Mockery::mock(Post::class, function ($mock) use ($builder) {
+            $mock->shouldReceive('newQuery')
+                ->andReturn($builder);
         });
         $repo = new EloquentPostRepository($post);
 

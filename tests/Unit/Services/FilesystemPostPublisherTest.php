@@ -24,14 +24,20 @@ class FilesystemPostPublisherTest extends TestCase
         $post1 = new \stdClass();
         $post1->content = 'content1';
         $post1->human_readable_url = 'url1';
+        $post1->deleted_at = false;
         $post2 = new \stdClass();
         $post2->content = 'content2';
         $post2->human_readable_url = 'url2';
+        $post2->deleted_at = false;
+        $post3 = new \stdClass();
+        $post3->content = 'content3';
+        $post3->human_readable_url = 'url3';
+        $post3->deleted_at = true;
         $posts = [
-            $post1, $post2
+            $post1, $post2, $post3
         ];
 
-        $markdownConverter = Mockery::mock(MarkdownConverterInterface::class, function ($mock) use ($post1, $post2) {
+        $markdownConverter = Mockery::mock(MarkdownConverterInterface::class, function ($mock) use ($post1, $post2, $post3) {
             $mock->shouldReceive('convertToHtml')
                 ->with($post1->content)
                 ->times(1)
@@ -40,8 +46,11 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with($post2->content)
                 ->times(1)
                 ->andReturn('content2 with markup');
+            $mock->shouldReceive('convertToHtml')
+                ->with($post3->content)
+                ->times(0);
         });
-        $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($post1, $post2) {
+        $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($post1, $post2, $post3) {
             $mock->shouldReceive('make')
                 ->with('posts.show', ['post' => $post1])
                 ->times(1)
@@ -50,6 +59,9 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with('posts.show', ['post' => $post2])
                 ->times(1)
                 ->andReturn('content2 with markup rendered in view');
+            $mock->shouldReceive('make')
+                ->with('posts.show', ['post' => $post3])
+                ->times(0);
         });
         $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
             $mock->shouldReceive('put')
@@ -58,6 +70,13 @@ class FilesystemPostPublisherTest extends TestCase
                 ->andReturn(true);
             $mock->shouldReceive('put')
                 ->with('url2', 'content2 with markup rendered in view')
+                ->times(1)
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('url3', 'content3 with markup rendered in view')
+                ->times(0);
+            $mock->shouldReceive('delete')
+                ->with('url3')
                 ->times(1)
                 ->andReturn(true);
         });
@@ -81,9 +100,11 @@ class FilesystemPostPublisherTest extends TestCase
         $post1 = new \stdClass();
         $post1->content = 'content1';
         $post1->human_readable_url = 'url1';
+        $post1->deleted_at = false;
         $post2 = new \stdClass();
         $post2->content = 'content2';
         $post2->human_readable_url = 'url2';
+        $post2->deleted_at = false;
         $posts = [
             $post1, $post2
         ];

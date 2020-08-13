@@ -30,7 +30,7 @@ class EloquentPostRepository implements PostRepositoryInterface
      */
     public function getAll()
     {
-        return $this->model->all();
+        return $this->model->newQuery()->withTrashed()->get();
     }
 
     /**

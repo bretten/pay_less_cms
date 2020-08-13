@@ -77,4 +77,17 @@ class EloquentPostRepository implements PostRepositoryInterface
         $this->model->human_readable_url = $humanReadableUrl;
         return $this->model->save();
     }
+
+    /**
+     * Deletes the Post indicated by the ID
+     *
+     * @param $id
+     * @return bool|null
+     * @throws \Exception
+     */
+    public function delete($id)
+    {
+        $this->model = $this->model->find($id);
+        return $this->model->delete();
+    }
 }

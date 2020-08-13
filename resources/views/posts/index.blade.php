@@ -20,6 +20,7 @@
                 <th>Created At</th>
                 <th>Updated At</th>
                 <th></th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -31,6 +32,15 @@
                     <td>{{ $post->created_at }}</td>
                     <td>{{ $post->updated_at }}</td>
                     <td><a class="btn btn-light" href="/posts/{{ $post->id }}/edit" role="button">Edit</a></td>
+                    <td>
+                        <form method="POST" action="/posts/{{ $post->id }}" id="post-{{ $post->id }}">
+                            @method('DELETE')
+                            @csrf
+                            <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('Please confirm the deletion:')">Delete
+                            </button>
+                        </form>
+                    </td>
                 </tr>
             @endforeach
             </tbody>

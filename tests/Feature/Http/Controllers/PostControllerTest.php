@@ -266,14 +266,46 @@ class PostControllerTest extends TestCase
     }
 
     /**
-     * Test destroy method is not implemented
+     * Test that the destroy method can delete a Post
      *
      * @return void
      */
-    public function testDestroyIsNotImplemented()
+    public function testDestroy()
     {
-        $response = $this->get('/posts/destroy');
+        // Setup
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
+            $mock->shouldReceive('delete')
+                ->with(1)
+                ->andReturn(true);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
 
+        // Execute
+        $response = $this->delete('/posts/1');
+
+        // Assert
+        $response->assertRedirect('/posts');
+    }
+
+    /**
+     * Test that the destroy method can handle an error while trying to delete a Post
+     *
+     * @return void
+     */
+    public function testDestroyCanHandleError()
+    {
+        // Setup
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
+            $mock->shouldReceive('delete')
+                ->with(1)
+                ->andReturn(false);
+        });
+        $this->app->instance(PostRepositoryInterface::class, $repo);
+
+        // Execute
+        $response = $this->delete('/posts/1');
+
+        // Assert
         $response->assertStatus(500);
     }
 }

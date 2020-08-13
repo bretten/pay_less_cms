@@ -146,4 +146,32 @@ class EloquentPostRepositoryTest extends TestCase
         // Assert
         $this->assertEquals($expected, $result);
     }
+
+    /**
+     * Tests that the repository can delete a Post by ID
+     *
+     * @return void
+     * @throws \Exception
+     */
+    public function testDelete()
+    {
+        // Setup
+        $id = 1;
+        $post = Mockery::mock(Post::class, function ($mock) use ($id) {
+            $mock->shouldReceive('find')
+                ->with($id)
+                ->times(1)
+                ->andReturn($mock);
+            $mock->shouldReceive('delete')
+                ->times(1)
+                ->andReturn(true);
+        });
+        $repo = new EloquentPostRepository($post);
+
+        // Execute
+        $result = $repo->delete($id);
+
+        // Assert
+        $this->assertTrue($result);
+    }
 }

@@ -116,10 +116,16 @@ class PostController extends Controller
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|\Illuminate\Routing\Redirector
      */
     public function destroy($id)
     {
-        return response('Not implemented', 501);
+        $result = $this->repository->delete($id);
+
+        if ($result) {
+            return redirect('/posts');
+        } else {
+            return response('Server error', 500);
+        }
     }
 }

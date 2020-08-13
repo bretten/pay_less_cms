@@ -43,4 +43,12 @@ interface PostRepositoryInterface
      * @return bool
      */
     public function update($id, string $title, string $content, string $humanReadableUrl);
+
+    /**
+     * Should delete a Post
+     *
+     * @param $id
+     * @return bool
+     */
+    public function delete($id);
 }

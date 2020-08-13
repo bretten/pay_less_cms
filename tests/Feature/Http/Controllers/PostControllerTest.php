@@ -147,7 +147,7 @@ class PostControllerTest extends TestCase
                 ->andReturn('url1');
         });
 
-        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.show', ['post' => $expectedPost]);
+        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.published.show', ['post' => $expectedPost]);
 
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($expectedPost) {
             $mock->shouldReceive('getById')

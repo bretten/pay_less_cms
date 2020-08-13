@@ -61,7 +61,7 @@ class FilesystemPostPublisher implements PostPublisherInterface
             }
 
             $post->content = $this->markdownConverter->convertToHtml($post->content);
-            $result = $this->filesystem->put($post->human_readable_url, $this->viewFactory->make('posts.show', ['post' => $post]));
+            $result = $this->filesystem->put($post->human_readable_url, $this->viewFactory->make('posts.published.show', ['post' => $post]));
 
             if ($result == false) {
                 $success = false;

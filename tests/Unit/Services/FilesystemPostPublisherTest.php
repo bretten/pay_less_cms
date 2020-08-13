@@ -52,15 +52,15 @@ class FilesystemPostPublisherTest extends TestCase
         });
         $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($post1, $post2, $post3) {
             $mock->shouldReceive('make')
-                ->with('posts.show', ['post' => $post1])
+                ->with('posts.published.show', ['post' => $post1])
                 ->times(1)
                 ->andReturn('content1 with markup rendered in view');
             $mock->shouldReceive('make')
-                ->with('posts.show', ['post' => $post2])
+                ->with('posts.published.show', ['post' => $post2])
                 ->times(1)
                 ->andReturn('content2 with markup rendered in view');
             $mock->shouldReceive('make')
-                ->with('posts.show', ['post' => $post3])
+                ->with('posts.published.show', ['post' => $post3])
                 ->times(0);
         });
         $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
@@ -121,11 +121,11 @@ class FilesystemPostPublisherTest extends TestCase
         });
         $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($post1, $post2) {
             $mock->shouldReceive('make')
-                ->with('posts.show', ['post' => $post1])
+                ->with('posts.published.show', ['post' => $post1])
                 ->times(1)
                 ->andReturn('content1 with markup rendered in view');
             $mock->shouldReceive('make')
-                ->with('posts.show', ['post' => $post2])
+                ->with('posts.published.show', ['post' => $post2])
                 ->times(1)
                 ->andReturn('content2 with markup rendered in view');
         });

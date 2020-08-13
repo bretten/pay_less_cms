@@ -74,7 +74,7 @@ class PostController extends Controller
     {
         $post = $this->repository->getById($id);
 
-        return response()->view('posts.show', ['post' => $post]);
+        return response()->view('posts.published.show', ['post' => $post]);
     }
 
     /**

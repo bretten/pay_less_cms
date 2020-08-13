@@ -23,6 +23,9 @@ class EloquentPostRepositoryTest extends TestCase
         // Setup
         $expected = ['Post1', 'Post2'];
         $builder = Mockery::mock(Builder::class, function ($mock) use ($expected) {
+            $mock->shouldReceive('orderByDesc')
+                ->with('created_at')
+                ->andReturn($mock);
             $mock->shouldReceive('withTrashed')
                 ->andReturn($mock);
             $mock->shouldReceive('get')

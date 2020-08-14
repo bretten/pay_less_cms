@@ -5,6 +5,7 @@ namespace App\Services;
 
 
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
+use InvalidArgumentException;
 use League\CommonMark\MarkdownConverterInterface;
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\FilesystemInterface;
@@ -44,9 +45,10 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * Publishes the specified Posts to the Filesystem
      *
      * @param iterable $posts
+     * @param string|null $site
      * @return bool
      */
-    public function publish(iterable $posts)
+    public function publish(iterable $posts, string $site = null)
     {
         $success = true;
 
@@ -63,7 +65,7 @@ class FilesystemPostPublisher implements PostPublisherInterface
             }
 
             $post->content = $this->markdownConverter->convertToHtml($post->content);
-            $result = $this->filesystem->put($post->human_readable_url, $this->viewFactory->make('posts.published.show', ['post' => $post]));
+            $result = $this->filesystem->put($post->human_readable_url, $this->renderPostContentView($post, $site));
 
             if ($result == false) {
                 $success = false;
@@ -71,10 +73,52 @@ class FilesystemPostPublisher implements PostPublisherInterface
             array_push($activePosts, $post);
         }
 
-        if (false == $this->filesystem->put('index.html', $this->viewFactory->make('posts.published.list', ['posts' => $activePosts]))) {
+        if (false == $this->filesystem->put('index.html', $this->renderPostIndexView($activePosts, $site))) {
             $success = false;
         }
 
         return $success;
+    }
+
+    /**
+     * Tries to render the Post with the view for the corresponding site. If no match is found, the Post
+     * is rendered with the default view
+     *
+     * @param object $post
+     * @param string|null $site
+     * @return \Illuminate\Contracts\View\View
+     */
+    private function renderPostContentView(object $post, string $site = null)
+    {
+        if ($site == null) {
+            return $this->viewFactory->make('posts.published.show', ['post' => $post]);
+        }
+
+        try {
+            return $this->viewFactory->make("posts.published.sites.$site.show", ['post' => $post]);
+        } catch (InvalidArgumentException $e) {
+            return $this->viewFactory->make('posts.published.show', ['post' => $post]);
+        }
+    }
+
+    /**
+     * Tries to render the Posts with the view for the corresponding site. If no match is found, the Posts
+     * are rendered with the default view
+     *
+     * @param iterable $posts
+     * @param string|null $site
+     * @return \Illuminate\Contracts\View\View
+     */
+    private function renderPostIndexView(iterable $posts, string $site = null)
+    {
+        if ($site == null) {
+            return $this->viewFactory->make('posts.published.list', ['posts' => $posts]);
+        }
+
+        try {
+            return $this->viewFactory->make("posts.published.sites.$site.list", ['posts' => $posts]);
+        } catch (InvalidArgumentException $e) {
+            return $this->viewFactory->make('posts.published.list', ['posts' => $posts]);
+        }
     }
 }

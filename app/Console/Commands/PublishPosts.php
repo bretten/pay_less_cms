@@ -13,7 +13,7 @@ class PublishPosts extends Command
      *
      * @var string
      */
-    protected $signature = 'posts:publish';
+    protected $signature = 'posts:publish {--site=}';
 
     /**
      * The console command description.
@@ -47,7 +47,7 @@ class PublishPosts extends Command
             return 0;
         }
 
-        $result = $publisher->publish($posts);
+        $result = $publisher->publish($posts, $this->option('site'));
 
         if ($result) {
             $this->line("Successfully published all posts");

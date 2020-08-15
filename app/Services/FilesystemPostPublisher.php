@@ -4,6 +4,7 @@
 namespace App\Services;
 
 
+use App\Contracts\Models\Post;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use InvalidArgumentException;
 use League\CommonMark\MarkdownConverterInterface;
@@ -44,11 +45,11 @@ class FilesystemPostPublisher implements PostPublisherInterface
     /**
      * Publishes the specified Posts to the Filesystem
      *
-     * @param iterable $posts
+     * @param Post[] $posts
      * @param string|null $site
      * @return bool
      */
-    public function publish(iterable $posts, string $site = null)
+    public function publish($posts, string $site = null)
     {
         $success = true;
 
@@ -84,11 +85,11 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * Tries to render the Post with the view for the corresponding site. If no match is found, the Post
      * is rendered with the default view
      *
-     * @param object $post
+     * @param Post $post
      * @param string|null $site
      * @return \Illuminate\Contracts\View\View
      */
-    private function renderPostContentView(object $post, string $site = null)
+    private function renderPostContentView(Post $post, string $site = null)
     {
         if ($site == null) {
             return $this->viewFactory->make('posts.published.show', ['post' => $post]);
@@ -105,11 +106,11 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * Tries to render the Posts with the view for the corresponding site. If no match is found, the Posts
      * are rendered with the default view
      *
-     * @param iterable $posts
+     * @param Post[] $posts
      * @param string|null $site
      * @return \Illuminate\Contracts\View\View
      */
-    private function renderPostIndexView(iterable $posts, string $site = null)
+    private function renderPostIndexView($posts, string $site = null)
     {
         if ($site == null) {
             return $this->viewFactory->make('posts.published.list', ['posts' => $posts]);

@@ -4,12 +4,15 @@
 namespace Tests\Unit\Repositories;
 
 
+use App\Contracts\Models\Post as PostContract;
 use App\Post;
 use App\Repositories\EloquentPostRepository;
+use DateTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use Tests\Mock\EloquentMocker;
 
 class EloquentPostRepositoryTest extends TestCase
 {
@@ -21,12 +24,21 @@ class EloquentPostRepositoryTest extends TestCase
     public function testGetAll()
     {
         // Setup
-        $expected = ['Post1', 'Post2'];
-        $builder = Mockery::mock(Builder::class, function ($mock) use ($expected) {
+        $expectedPost1 = new PostContract(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $expectedPost2 = new PostContract(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
+        $expectedPosts = [
+            $expectedPost1, $expectedPost2
+        ];
+        $eloquentPost1 = EloquentMocker::mockPost(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $eloquentPost2 = EloquentMocker::mockPost(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
+        $eloquentPosts = [
+            $eloquentPost1, $eloquentPost2
+        ];
+        $builder = Mockery::mock(Builder::class, function ($mock) use ($eloquentPosts) {
             $mock->shouldReceive('withTrashed')
                 ->andReturn($mock);
             $mock->shouldReceive('get')
-                ->andReturn($expected);
+                ->andReturn($eloquentPosts);
         });
         $post = Mockery::mock(Post::class, function ($mock) use ($builder) {
             $mock->shouldReceive('newQuery')
@@ -38,7 +50,7 @@ class EloquentPostRepositoryTest extends TestCase
         $result = $repo->getAll();
 
         // Assert
-        $this->assertEquals($expected, $result);
+        $this->assertEquals($expectedPosts, $result);
     }
 
     /**
@@ -49,19 +61,20 @@ class EloquentPostRepositoryTest extends TestCase
     public function testGetById()
     {
         // Setup
-        $expected = ['Post7'];
-        $post = Mockery::mock(Post::class, function ($mock) use ($expected) {
+        $expectedPost = new PostContract(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $eloquentPost = EloquentMocker::mockPost(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $post = Mockery::mock(Post::class, function ($mock) use ($eloquentPost) {
             $mock->shouldReceive('findOrFail')
-                ->with(7)
-                ->andReturn($expected);
+                ->with(1)
+                ->andReturn($eloquentPost);
         });
         $repo = new EloquentPostRepository($post);
 
         // Execute
-        $result = $repo->getById(7);
+        $result = $repo->getById(1);
 
         // Assert
-        $this->assertEquals($expected, $result);
+        $this->assertEquals($expectedPost, $result);
     }
 
     /**

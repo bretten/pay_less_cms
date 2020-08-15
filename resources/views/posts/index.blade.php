@@ -31,8 +31,8 @@
                     <td><a href="/posts/{{ $post->id }}">{{ $post->title }}</a></td>
                     <td>{{ $post->human_readable_url }}</td>
                     <td>{{ $post->content }}</td>
-                    <td>{{ $post->created_at }}</td>
-                    <td>{{ $post->updated_at }}</td>
+                    <td>{{ $post->created_at->format('Y-m-d H:i:s') }}</td>
+                    <td>{{ $post->updated_at->format('Y-m-d H:i:s') }}</td>
                     <td><a class="btn btn-light" href="/posts/{{ $post->id }}/edit" role="button">Edit</a></td>
                     <td>
                         @if (!$post->deleted_at)

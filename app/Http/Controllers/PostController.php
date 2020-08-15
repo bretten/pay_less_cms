@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\Models\Post;
 use App\Repositories\PostRepositoryInterface;
 use Illuminate\Http\Request;
 
@@ -29,7 +30,10 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = $this->repository->getAll()->sortByDesc('created_at');
+        $posts = $this->repository->getAll();
+        usort($posts, function (Post $a, Post $b) {
+            return $b->created_at->getTimestamp() - $a->created_at->getTimestamp();
+        });
 
         return response()->view('posts.index', ['posts' => $posts]);
     }

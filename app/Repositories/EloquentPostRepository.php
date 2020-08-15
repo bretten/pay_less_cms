@@ -4,6 +4,7 @@
 namespace App\Repositories;
 
 
+use App\Contracts\Models\Post as PostContract;
 use App\Post;
 
 class EloquentPostRepository implements PostRepositoryInterface
@@ -24,24 +25,27 @@ class EloquentPostRepository implements PostRepositoryInterface
     }
 
     /**
-     * Returns all Post rows
-     *
-     * @return Post[]|\Illuminate\Database\Eloquent\Collection
+     * @return PostContract[]
      */
     public function getAll()
     {
-        return $this->model->newQuery()->withTrashed()->get();
+        $eloquentModels = $this->model->newQuery()->withTrashed()->get();
+        $posts = [];
+        foreach ($eloquentModels as $model) {
+            $posts[] = $model->toSimple();
+        }
+        return $posts;
     }
 
     /**
      * Returns the Post specified by the ID
      *
      * @param $id
-     * @return Post
+     * @return PostContract
      */
     public function getById($id)
     {
-        return $this->model->findOrFail($id);
+        return $this->model->findOrFail($id)->toSimple();
     }
 
     /**

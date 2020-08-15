@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Contracts\Models\Post;
 use App\Repositories\PostRepositoryInterface;
 use App\Services\PostPublisherInterface;
 use Illuminate\Console\Command;
@@ -46,6 +47,10 @@ class PublishPosts extends Command
             $this->warn("No posts to publish");
             return 0;
         }
+
+        usort($posts, function (Post $a, Post $b) {
+            return $b->created_at->getTimestamp() - $a->created_at->getTimestamp();
+        });
 
         $result = $publisher->publish($posts, $this->option('site'));
 

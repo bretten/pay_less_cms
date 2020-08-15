@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Http\Controllers;
 
-use App\Post;
+use App\Contracts\Models\Post;
 use App\Repositories\PostRepositoryInterface;
+use DateTime;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Collection;
 use Mockery;
 use Tests\TestCase;
 
@@ -20,35 +20,15 @@ class PostControllerTest extends TestCase
     public function testIndex()
     {
         // Setup
-        $post1 = new \stdClass();
-        $post1->id = 1;
-        $post1->title = 'title1';
-        $post1->content = 'content1';
-        $post1->human_readable_url = 'url1';
-        $post1->created_at = date('Y-m-d H:i:s');
-        $post1->updated_at = date('Y-m-d H:i:s');
-        $post1->deleted_at = false;
-        $post2 = new \stdClass();
-        $post2->id = 2;
-        $post2->title = 'title2';
-        $post2->content = 'content2';
-        $post2->human_readable_url = 'url2';
-        $post2->created_at = date('Y-m-d H:i:s');
-        $post2->updated_at = date('Y-m-d H:i:s');
-        $post2->deleted_at = false;
+        $post1 = new Post(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $post2 = new Post(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
         $posts = [
             $post1, $post2
         ];
-        $collection = Mockery::mock(Collection::class, function ($mock) use ($posts) {
-            $mock->shouldReceive('sortByDesc')
-                ->with('created_at')
-                ->times(1)
-                ->andReturn($posts);
-        });
-        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($collection) {
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($posts) {
             $mock->shouldReceive('getAll')
                 ->times(1)
-                ->andReturn($collection);
+                ->andReturn($posts);
         });
         $this->app->instance(PostRepositoryInterface::class, $repo);
 
@@ -132,32 +112,19 @@ class PostControllerTest extends TestCase
     public function testShow()
     {
         // Setup
-        $expectedPost = Mockery::mock(Post::class, function ($mock) {
-            $mock->shouldReceive('getAttribute')
-                ->with('id')
-                ->andReturn(7);
-            $mock->shouldReceive('getAttribute')
-                ->with('title')
-                ->andReturn('Post title');
-            $mock->shouldReceive('getAttribute')
-                ->with('content')
-                ->andReturn('Post content');
-            $mock->shouldReceive('getAttribute')
-                ->with('human_readable_url')
-                ->andReturn('url1');
-        });
+        $post = new Post(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
 
-        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.published.show', ['post' => $expectedPost]);
+        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.published.show', ['post' => $post]);
 
-        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($expectedPost) {
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($post) {
             $mock->shouldReceive('getById')
-                ->with(7)
-                ->andReturn($expectedPost);
+                ->with(1)
+                ->andReturn($post);
         });
         $this->app->instance(PostRepositoryInterface::class, $repo);
 
         // Execute
-        $response = $this->get('/posts/7');
+        $response = $this->get('/posts/1');
 
         // Assert
         $response->assertStatus(200);
@@ -174,13 +141,13 @@ class PostControllerTest extends TestCase
         // Setup
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
             $mock->shouldReceive('getById')
-                ->with(7)
+                ->with(1)
                 ->andThrow(new ModelNotFoundException);
         });
         $this->app->instance(PostRepositoryInterface::class, $repo);
 
         // Execute
-        $response = $this->get('/posts/7');
+        $response = $this->get('/posts/1');
 
         // Assert
         $response->assertStatus(404);
@@ -194,27 +161,14 @@ class PostControllerTest extends TestCase
     public function testEdit()
     {
         // Setup
-        $expectedPost = Mockery::mock(Post::class, function ($mock) {
-            $mock->shouldReceive('getAttribute')
-                ->with('id')
-                ->andReturn(1);
-            $mock->shouldReceive('getAttribute')
-                ->with('title')
-                ->andReturn('Post title1');
-            $mock->shouldReceive('getAttribute')
-                ->with('content')
-                ->andReturn('Post content1');
-            $mock->shouldReceive('getAttribute')
-                ->with('human_readable_url')
-                ->andReturn('url1');
-        });
+        $post = new Post(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
 
-        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.edit', ['post' => $expectedPost]);
+        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.edit', ['post' => $post]);
 
-        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($expectedPost) {
+        $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($post) {
             $mock->shouldReceive('getById')
                 ->with(1)
-                ->andReturn($expectedPost);
+                ->andReturn($post);
         });
         $this->app->instance(PostRepositoryInterface::class, $repo);
 

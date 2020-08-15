@@ -4,8 +4,10 @@
 namespace Tests\Feature\Console\Commands;
 
 
+use App\Contracts\Models\Post;
 use App\Repositories\PostRepositoryInterface;
 use App\Services\PostPublisherInterface;
+use DateTime;
 use Mockery;
 use Tests\TestCase;
 
@@ -19,12 +21,8 @@ class PublishPostsTest extends TestCase
     public function testPublishPostsCommand()
     {
         // Setup
-        $post1 = new \stdClass();
-        $post1->content = 'content1';
-        $post1->human_readable_url = 'url1';
-        $post2 = new \stdClass();
-        $post2->content = 'content2';
-        $post2->human_readable_url = 'url2';
+        $post1 = new Post(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $post2 = new Post(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
         $expectedPosts = [
             $post1, $post2
         ];
@@ -36,7 +34,7 @@ class PublishPostsTest extends TestCase
         });
         $publisher = Mockery::mock(PostPublisherInterface::class, function ($mock) use ($expectedPosts, $site) {
             $mock->shouldReceive('publish')
-                ->with($expectedPosts, $site)
+                ->with(array_reverse($expectedPosts), $site) // Post order will be sort by descending creation date
                 ->andReturns(true);
         });
 
@@ -56,12 +54,8 @@ class PublishPostsTest extends TestCase
     public function testPublishPostsCommandWithSiteOption()
     {
         // Setup
-        $post1 = new \stdClass();
-        $post1->content = 'content1';
-        $post1->human_readable_url = 'url1';
-        $post2 = new \stdClass();
-        $post2->content = 'content2';
-        $post2->human_readable_url = 'url2';
+        $post1 = new Post(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $post2 = new Post(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
         $expectedPosts = [
             $post1, $post2
         ];
@@ -73,7 +67,7 @@ class PublishPostsTest extends TestCase
         });
         $publisher = Mockery::mock(PostPublisherInterface::class, function ($mock) use ($expectedPosts, $site) {
             $mock->shouldReceive('publish')
-                ->with($expectedPosts, $site)
+                ->with(array_reverse($expectedPosts), $site) // Post order will be sort by descending creation date
                 ->andReturns(true);
         });
 
@@ -120,12 +114,8 @@ class PublishPostsTest extends TestCase
     public function testPublishPostsCommandHandlesErrorWhenPublishing()
     {
         // Setup
-        $post1 = new \stdClass();
-        $post1->content = 'content1';
-        $post1->human_readable_url = 'url1';
-        $post2 = new \stdClass();
-        $post2->content = 'content2';
-        $post2->human_readable_url = 'url2';
+        $post1 = new Post(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $post2 = new Post(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
         $expectedPosts = [
             $post1, $post2
         ];
@@ -137,7 +127,7 @@ class PublishPostsTest extends TestCase
         });
         $publisher = Mockery::mock(PostPublisherInterface::class, function ($mock) use ($expectedPosts, $site) {
             $mock->shouldReceive('publish')
-                ->with($expectedPosts, $site)
+                ->with(array_reverse($expectedPosts), $site) // Post order will be sort by descending creation date
                 ->andReturns(false);
         });
 

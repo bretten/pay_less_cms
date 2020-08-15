@@ -57,16 +57,16 @@ class FilesystemPostPublisher implements PostPublisherInterface
 
         foreach ($posts as $post) {
 
-            if ($post->deleted_at) {
+            if ($post->deletedAt) {
                 try {
-                    $this->filesystem->delete($post->human_readable_url);
+                    $this->filesystem->delete($post->humanReadableUrl);
                 } catch (FileNotFoundException $e) {
                 }
                 continue;
             }
 
             $post->content = $this->markdownConverter->convertToHtml($post->content);
-            $result = $this->filesystem->put($post->human_readable_url, $this->renderPostContentView($post, $site));
+            $result = $this->filesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site));
 
             if ($result == false) {
                 $success = false;

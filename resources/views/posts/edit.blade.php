@@ -26,7 +26,7 @@
             <div class="form-group">
                 <label for="post-human-readable-url">Human Readable URL</label>
                 <input type="text" class="form-control" id="post-human-readable-url" name="human_readable_url"
-                       value="{{ $post->human_readable_url }}">
+                       value="{{ $post->humanReadableUrl }}">
             </div>
 
             <button type="submit" class="btn btn-primary">Submit</button>

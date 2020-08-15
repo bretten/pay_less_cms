@@ -32,7 +32,7 @@ class PostController extends Controller
     {
         $posts = $this->repository->getAll();
         usort($posts, function (Post $a, Post $b) {
-            return $b->created_at->getTimestamp() - $a->created_at->getTimestamp();
+            return $b->createdAt->getTimestamp() - $a->createdAt->getTimestamp();
         });
 
         return response()->view('posts.index', ['posts' => $posts]);

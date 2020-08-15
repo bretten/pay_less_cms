@@ -11,10 +11,10 @@ class Post
     public int $id;
     public string $title;
     public string $content;
-    public string $human_readable_url;
-    public DateTime $created_at;
-    public DateTime $updated_at;
-    public ?Datetime $deleted_at;
+    public string $humanReadableUrl;
+    public DateTime $createdAt;
+    public DateTime $updatedAt;
+    public ?Datetime $deletedAt;
 
     /**
      * Post constructor.
@@ -22,20 +22,20 @@ class Post
      * @param int $id
      * @param string $title
      * @param string $content
-     * @param string $human_readable_url
-     * @param DateTime $created_at
-     * @param DateTime $updated_at
-     * @param DateTime|null $deleted_at
+     * @param string $humanReadableUrl
+     * @param DateTime $createdAt
+     * @param DateTime $updatedAt
+     * @param DateTime|null $deletedAt
      */
-    public function __construct(int $id, string $title, string $content, string $human_readable_url, DateTime $created_at, DateTime $updated_at, ?Datetime $deleted_at)
+    public function __construct(int $id, string $title, string $content, string $humanReadableUrl, DateTime $createdAt, DateTime $updatedAt, ?Datetime $deletedAt)
     {
         $this->id = $id;
         $this->title = $title;
         $this->content = $content;
-        $this->human_readable_url = $human_readable_url;
-        $this->created_at = $created_at;
-        $this->updated_at = $updated_at;
-        $this->deleted_at = $deleted_at;
+        $this->humanReadableUrl = $humanReadableUrl;
+        $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
+        $this->deletedAt = $deletedAt;
     }
 
 }

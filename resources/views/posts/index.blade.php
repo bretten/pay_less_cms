@@ -29,13 +29,13 @@
                 <tr>
                     <th>{{ $post->id }}</th>
                     <td><a href="/posts/{{ $post->id }}">{{ $post->title }}</a></td>
-                    <td>{{ $post->human_readable_url }}</td>
+                    <td>{{ $post->humanReadableUrl }}</td>
                     <td>{{ $post->content }}</td>
-                    <td>{{ $post->created_at->format('Y-m-d H:i:s') }}</td>
-                    <td>{{ $post->updated_at->format('Y-m-d H:i:s') }}</td>
+                    <td>{{ $post->createdAt->format('Y-m-d H:i:s') }}</td>
+                    <td>{{ $post->updatedAt->format('Y-m-d H:i:s') }}</td>
                     <td><a class="btn btn-light" href="/posts/{{ $post->id }}/edit" role="button">Edit</a></td>
                     <td>
-                        @if (!$post->deleted_at)
+                        @if (!$post->deletedAt)
                             <form method="POST" action="/posts/{{ $post->id }}" id="post-{{ $post->id }}">
                                 @method('DELETE')
                                 @csrf

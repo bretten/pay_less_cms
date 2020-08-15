@@ -29,10 +29,10 @@
             <div class="card-body">
                 {!! $post->content !!}
 
-                <p><a href="{{ $post->human_readable_url }}" class="btn btn-primary">Expand</a></p>
+                <p><a href="{{ $post->humanReadableUrl }}" class="btn btn-primary">Expand</a></p>
             </div>
             <div class="card-footer text-muted text-right">
-                {{ $post->created_at }}
+                {{ $post->createdAt }}
             </div>
         </div>
     @endforeach

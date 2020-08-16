@@ -5,6 +5,8 @@ namespace App\Repositories;
 
 
 use App\Contracts\Models\Post;
+use App\Support\DateTimeFactoryInterface;
+use App\Support\UniqueIdFactoryInterface;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Marshaler;
 use DateTime;
@@ -23,6 +25,16 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
     private string $tableName;
 
     /**
+     * @var DateTimeFactoryInterface $dateTimeFactory
+     */
+    private DateTimeFactoryInterface $dateTimeFactory;
+
+    /**
+     * @var UniqueIdFactoryInterface $uniqueIdFactory
+     */
+    private UniqueIdFactoryInterface $uniqueIdFactory;
+
+    /**
      * @var Marshaler $marshaler
      */
     private Marshaler $marshaler;
@@ -32,11 +44,15 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
      *
      * @param DynamoDbClient $client
      * @param string $tableName
+     * @param DateTimeFactoryInterface $dateTimeFactory
+     * @param UniqueIdFactoryInterface $uniqueIdFactory
      */
-    public function __construct(DynamoDbClient $client, string $tableName)
+    public function __construct(DynamoDbClient $client, string $tableName, DateTimeFactoryInterface $dateTimeFactory, UniqueIdFactoryInterface $uniqueIdFactory)
     {
         $this->client = $client;
         $this->tableName = $tableName;
+        $this->dateTimeFactory = $dateTimeFactory;
+        $this->uniqueIdFactory = $uniqueIdFactory;
         $this->marshaler = new Marshaler();
     }
 
@@ -95,9 +111,9 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
      */
     public function create(string $title, string $content, string $humanReadableUrl)
     {
-        $now = new DateTime('now', new DateTimeZone('UTC'));
+        $now = $this->dateTimeFactory->getUtcNow();
         $post = [
-            'id' => 0,
+            'id' => $this->uniqueIdFactory->generateUniqueId(),
             'title' => $title,
             'content' => $content,
             'human_readable_url' => $humanReadableUrl,
@@ -124,7 +140,7 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
      */
     public function update($id, string $title, string $content, string $humanReadableUrl)
     {
-        $now = new DateTime('now', new DateTimeZone('UTC'));
+        $now = $this->dateTimeFactory->getUtcNow();
         $result = $this->client->updateItem([
             'TableName' => $this->tableName,
             'Key' => $this->marshaler->marshalItem([
@@ -150,7 +166,7 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
      */
     public function delete($id)
     {
-        $now = new DateTime('now', new DateTimeZone('UTC'));
+        $now = $this->dateTimeFactory->getUtcNow();
         $result = $this->client->updateItem([
             'TableName' => $this->tableName,
             'Key' => $this->marshaler->marshalItem([

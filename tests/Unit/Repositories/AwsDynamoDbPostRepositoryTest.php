@@ -6,6 +6,8 @@ namespace Repositories;
 
 use App\Contracts\Models\Post;
 use App\Repositories\AwsDynamoDbPostRepository;
+use App\Support\DateTimeFactoryInterface;
+use App\Support\UniqueIdFactoryInterface;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\Result;
 use DateTime;
@@ -72,7 +74,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                     ]
                 ]));
         });
-        $repo = new AwsDynamoDbPostRepository($client, $table);
+        $repo = new AwsDynamoDbPostRepository($client, $table, Mockery::mock(DateTimeFactoryInterface::class), Mockery::mock(UniqueIdFactoryInterface::class));
 
         $expectedPosts = [
             new Post(1, 'title1', 'content1', 'url1', new DateTime('@1597553412', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), null),
@@ -117,7 +119,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                     ]
                 ]));
         });
-        $repo = new AwsDynamoDbPostRepository($client, $table);
+        $repo = new AwsDynamoDbPostRepository($client, $table, Mockery::mock(DateTimeFactoryInterface::class), Mockery::mock(UniqueIdFactoryInterface::class));
 
         $expectedPost = new Post(1, 'title1', 'content1', 'url1', new DateTime('@1597553412', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), null);
 
@@ -138,27 +140,39 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
     {
         // Setup
         $table = 'test-table';
-        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table) {
+        $now = new DateTime('2020-08-16 02:01:01');
+        $id = 1;
+        $dateTimeFactory = Mockery::mock(DateTimeFactoryInterface::class, function ($mock) use ($now) {
+            $mock->shouldReceive('getUtcNow')
+                ->times(1)
+                ->andReturn($now);
+        });
+        $uniqueIdFactory = Mockery::mock(UniqueIdFactoryInterface::class, function ($mock) use ($id) {
+            $mock->shouldReceive('generateUniqueId')
+                ->times(1)
+                ->andReturn($id);
+        });
+        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table, $id, $now) {
             $mock->shouldReceive('putItem')
-                ->with(Mockery::subset([
+                ->with([
                     'TableName' => $table,
                     'Item' => [
-                        'id' => ['N' => 0],
+                        'id' => ['N' => 1],
                         'title' => ['S' => 'title1'],
                         'content' => ['S' => 'content1'],
                         'human_readable_url' => ['S' => 'url1'],
-//                        'created_at' => ['N' => Mockery::any()], // TODO: Timestamp factory
-//                        'updated_at' => ['N' => Mockery::any()], // TODO: Timestamp factory
+                        'created_at' => ['N' => $now->getTimestamp()],
+                        'updated_at' => ['N' => $now->getTimestamp()],
                         'deleted_at' => ['NULL' => true],
                     ]
-                ], false))
+                ])
                 ->andReturn(new Result([
                     '@metadata' => [
                         'statusCode' => 200
                     ]
                 ]));
         });
-        $repo = new AwsDynamoDbPostRepository($client, $table);
+        $repo = new AwsDynamoDbPostRepository($client, $table, $dateTimeFactory, $uniqueIdFactory);
 
         // Execute
         $result = $repo->create('title1', 'content1', 'url1');
@@ -181,28 +195,34 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         $title = 'title1 v2';
         $content = 'content1 v2';
         $url = 'url1 v2';
-        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table, $id, $title, $content, $url) {
+        $now = new DateTime('2020-08-16 02:01:01');
+        $dateTimeFactory = Mockery::mock(DateTimeFactoryInterface::class, function ($mock) use ($now) {
+            $mock->shouldReceive('getUtcNow')
+                ->times(1)
+                ->andReturn($now);
+        });
+        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table, $id, $title, $content, $url, $now) {
             $mock->shouldReceive('updateItem')
-                ->with(Mockery::subset([
+                ->with([
                     'TableName' => $table,
                     'Key' => [
                         'id' => ['N' => $id]
                     ],
                     'UpdateExpression' => 'set title = :t, content = :c, human_readable_url = :url, updated_at = :ua',
                     'ExpressionAttributeValues' => [
-//                        ':t' => $title,
-//                        ':c' => $content,
-//                        ':url' => $url,
-//                        ':ua' => Mockery::any() // TODO: Timestamp factory
+                        ':t' => ['S' => $title],
+                        ':c' => ['S' => $content],
+                        ':url' => ['S' => $url],
+                        ':ua' => ['N' => $now->getTimestamp()]
                     ]
-                ], false))
+                ])
                 ->andReturn(new Result([
                     '@metadata' => [
                         'statusCode' => 200
                     ]
                 ]));
         });
-        $repo = new AwsDynamoDbPostRepository($client, $table);
+        $repo = new AwsDynamoDbPostRepository($client, $table, $dateTimeFactory, Mockery::Mock(UniqueIdFactoryInterface::class));
 
         // Execute
         $result = $repo->update($id, $title, $content, $url);
@@ -222,26 +242,32 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         // Setup
         $table = 'test-table';
         $id = 1;
-        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table, $id) {
+        $now = new DateTime('2020-08-16 02:01:01');
+        $dateTimeFactory = Mockery::mock(DateTimeFactoryInterface::class, function ($mock) use ($now) {
+            $mock->shouldReceive('getUtcNow')
+                ->times(1)
+                ->andReturn($now);
+        });
+        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table, $id, $now) {
             $mock->shouldReceive('updateItem')
-                ->with(Mockery::subset([
+                ->with([
                     'TableName' => $table,
                     'Key' => [
                         'id' => ['N' => $id]
                     ],
                     'UpdateExpression' => 'set updated_at = :ua, deleted_at = :da',
                     'ExpressionAttributeValues' => [
-//                        ':ua' => Mockery::any(), // TODO: Timestamp factory
-//                        ':da' => Mockery::any() // TODO: Timestamp factory
+                        ':ua' => ['N' => $now->getTimestamp()],
+                        ':da' => ['N' => $now->getTimestamp()]
                     ]
-                ], false))
+                ])
                 ->andReturn(new Result([
                     '@metadata' => [
                         'statusCode' => 200
                     ]
                 ]));
         });
-        $repo = new AwsDynamoDbPostRepository($client, $table);
+        $repo = new AwsDynamoDbPostRepository($client, $table, $dateTimeFactory, Mockery::mock(UniqueIdFactoryInterface::class));
 
         // Execute
         $result = $repo->delete($id);

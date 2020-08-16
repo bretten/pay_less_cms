@@ -32,7 +32,7 @@
                 <p><a href="{{ $post->humanReadableUrl }}" class="btn btn-primary">Expand</a></p>
             </div>
             <div class="card-footer text-muted text-right">
-                {{ $post->createdAt }}
+                {{ $post->createdAt->format('Y-m-d H:i:s') }}
             </div>
         </div>
     @endforeach

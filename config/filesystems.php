@@ -82,4 +82,34 @@ return [
         public_path('storage') => storage_path('app/public'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Publisher Disks
+    |--------------------------------------------------------------------------
+    |
+    | Disks that are used by the Post publisher
+    |
+    */
+
+    'publisher_default' => env('FILESYSTEM_PUBLISHER_DRIVER', 'local'),
+
+    'publisher_disks' => [
+
+        'local' => [
+            'driver' => 'local',
+            'root' => storage_path('app') . '/published',
+        ],
+
+        's3' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_PUBLISH_BUCKET'),
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
+        ],
+
+    ],
+
 ];

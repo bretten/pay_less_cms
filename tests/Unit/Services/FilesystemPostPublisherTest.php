@@ -19,6 +19,7 @@ class FilesystemPostPublisherTest extends TestCase
      * Tests that Posts can be published to the Filesystem
      *
      * @return void
+     * @throws \League\Flysystem\FileNotFoundException
      */
     public function testPublishPostsToFilesystem()
     {
@@ -28,6 +29,18 @@ class FilesystemPostPublisherTest extends TestCase
         $post3 = new Post(3, 'title3', 'content3', 'url3', new DateTime('2020-08-15 03:03:03'), new DateTime('2020-08-15 03:03:03'), new DateTime('2020-08-15 03:03:03'));
         $posts = [
             $post1, $post2, $post3
+        ];
+        $assetFiles = [
+            [
+                'type' => 'file',
+                'path' => 'assets_to_publish/asset1.js',
+                'basename' => 'asset1.js',
+            ],
+            [
+                'type' => 'file',
+                'path' => 'assets_to_publish/asset2.js',
+                'basename' => 'asset2.css',
+            ]
         ];
 
         $markdownConverter = Mockery::mock(MarkdownConverterInterface::class, function ($mock) use ($post1, $post2, $post3) {
@@ -60,7 +73,22 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn('posts list rendered in view');
         });
-        $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
+        $sourceFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
+            $mock->shouldReceive('listContents')
+                ->with('assets_to_publish/')
+                ->times(1)
+                ->andReturn($assetFiles);
+            $mock->shouldReceive('read')
+                ->with($assetFiles[0]['path'])
+                ->times(1)
+                ->andReturn('asset1 content');
+            $mock->shouldReceive('read')
+                ->with($assetFiles[1]['path'])
+                ->times(1)
+                ->andReturn('asset2 content');
+        });
+        $destinationFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
+            // Publish posts
             $mock->shouldReceive('put')
                 ->with('url1', 'content1 with markup rendered in view')
                 ->times(1)
@@ -76,12 +104,27 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with('url3')
                 ->times(1)
                 ->andReturn(true);
+
+            // Publish index file
             $mock->shouldReceive('put')
                 ->with('index.html', 'posts list rendered in view')
                 ->times(1)
                 ->andReturn(true);
+
+            // Copy assets
+            $mock->shouldReceive('deleteDir')
+                ->with('assets')
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('assets/' . $assetFiles[0]['basename'], 'asset1 content')
+                ->times(1)
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('assets/' . $assetFiles[1]['basename'], 'asset2 content')
+                ->times(1)
+                ->andReturn(true);
         });
-        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $filesystem);
+        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $sourceFilesystem, $destinationFilesystem);
 
         // Execute
         $result = $publisher->publish($posts);
@@ -94,6 +137,7 @@ class FilesystemPostPublisherTest extends TestCase
      * Tests that Posts can be published to the Filesystem with a custom site view
      *
      * @return void
+     * @throws \League\Flysystem\FileNotFoundException
      */
     public function testPublishPostsWithCustomSiteViewsToFilesystem()
     {
@@ -105,6 +149,18 @@ class FilesystemPostPublisherTest extends TestCase
             $post1, $post2, $post3
         ];
         $site = 'site1';
+        $assetFiles = [
+            [
+                'type' => 'file',
+                'path' => "assets_to_publish/$site/asset1.js",
+                'basename' => 'asset1.js',
+            ],
+            [
+                'type' => 'file',
+                'path' => "assets_to_publish/$site/asset2.js",
+                'basename' => 'asset2.css',
+            ]
+        ];
 
         $markdownConverter = Mockery::mock(MarkdownConverterInterface::class, function ($mock) use ($post1, $post2, $post3) {
             $mock->shouldReceive('convertToHtml')
@@ -136,7 +192,22 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn('custom site: posts list rendered in view');
         });
-        $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
+        $sourceFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($site, $assetFiles) {
+            $mock->shouldReceive('listContents')
+                ->with("assets_to_publish/$site")
+                ->times(1)
+                ->andReturn($assetFiles);
+            $mock->shouldReceive('read')
+                ->with($assetFiles[0]['path'])
+                ->times(1)
+                ->andReturn('asset1 content');
+            $mock->shouldReceive('read')
+                ->with($assetFiles[1]['path'])
+                ->times(1)
+                ->andReturn('asset2 content');
+        });
+        $destinationFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($site, $assetFiles) {
+            // Publish posts
             $mock->shouldReceive('put')
                 ->with('url1', 'custom site: content1 with markup rendered in view')
                 ->times(1)
@@ -152,12 +223,27 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with('url3')
                 ->times(1)
                 ->andReturn(true);
+
+            // Publish index file
             $mock->shouldReceive('put')
                 ->with('index.html', 'custom site: posts list rendered in view')
                 ->times(1)
                 ->andReturn(true);
+
+            // Copy assets
+            $mock->shouldReceive('deleteDir')
+                ->with('assets')
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('assets/' . $assetFiles[0]['basename'], 'asset1 content')
+                ->times(1)
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('assets/' . $assetFiles[1]['basename'], 'asset2 content')
+                ->times(1)
+                ->andReturn(true);
         });
-        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $filesystem);
+        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $sourceFilesystem, $destinationFilesystem);
 
         // Execute
         $result = $publisher->publish($posts, $site);
@@ -170,6 +256,7 @@ class FilesystemPostPublisherTest extends TestCase
      * Tests that Posts can be published to the Filesystem with an error
      *
      * @return void
+     * @throws \League\Flysystem\FileNotFoundException
      */
     public function testPublishPostsToFilesystemWithFailure()
     {
@@ -178,6 +265,18 @@ class FilesystemPostPublisherTest extends TestCase
         $post2 = new Post(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
         $posts = [
             $post1, $post2
+        ];
+        $assetFiles = [
+            [
+                'type' => 'file',
+                'path' => 'assets_to_publish/asset1.js',
+                'basename' => 'asset1.js',
+            ],
+            [
+                'type' => 'file',
+                'path' => 'assets_to_publish/asset2.js',
+                'basename' => 'asset2.css',
+            ]
         ];
 
         $markdownConverter = Mockery::mock(MarkdownConverterInterface::class, function ($mock) use ($post1, $post2) {
@@ -204,7 +303,22 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn('posts list rendered in view');
         });
-        $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) {
+        $sourceFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
+            $mock->shouldReceive('listContents')
+                ->with('assets_to_publish/')
+                ->times(1)
+                ->andReturn($assetFiles);
+            $mock->shouldReceive('read')
+                ->with($assetFiles[0]['path'])
+                ->times(1)
+                ->andReturn('asset1 content');
+            $mock->shouldReceive('read')
+                ->with($assetFiles[1]['path'])
+                ->times(1)
+                ->andReturn('asset2 content');
+        });
+        $destinationFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
+            // Publish posts
             $mock->shouldReceive('put')
                 ->with('url1', 'content1 with markup rendered in view')
                 ->times(1)
@@ -217,8 +331,27 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with('index.html', 'posts list rendered in view')
                 ->times(1)
                 ->andReturn(true);
+
+            // Publish index file
+            $mock->shouldReceive('put')
+                ->with('index.html', 'posts list rendered in view')
+                ->times(1)
+                ->andReturn(true);
+
+            // Copy assets
+            $mock->shouldReceive('deleteDir')
+                ->with('assets')
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('assets/' . $assetFiles[0]['basename'], 'asset1 content')
+                ->times(1)
+                ->andReturn(true);
+            $mock->shouldReceive('put')
+                ->with('assets/' . $assetFiles[1]['basename'], 'asset2 content')
+                ->times(1)
+                ->andReturn(true);
         });
-        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $filesystem);
+        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $sourceFilesystem, $destinationFilesystem);
 
         // Execute
         $result = $publisher->publish($posts);

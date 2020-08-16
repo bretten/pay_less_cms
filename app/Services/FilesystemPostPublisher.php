@@ -16,30 +16,37 @@ class FilesystemPostPublisher implements PostPublisherInterface
     /**
      * @var MarkdownConverterInterface
      */
-    private $markdownConverter;
+    private MarkdownConverterInterface $markdownConverter;
 
     /**
      * @var ViewFactoryContract
      */
-    private $viewFactory;
+    private ViewFactoryContract $viewFactory;
 
     /**
      * @var FilesystemInterface
      */
-    private $filesystem;
+    private FilesystemInterface $sourceFilesystem;
+
+    /**
+     * @var FilesystemInterface
+     */
+    private FilesystemInterface $destinationFilesystem;
 
     /**
      * Constructor
      *
      * @param MarkdownConverterInterface $markdownConverter
      * @param ViewFactoryContract $viewFactory
-     * @param FilesystemInterface $filesystem
+     * @param FilesystemInterface $sourceFilesystem
+     * @param FilesystemInterface $destinationFilesystem
      */
-    public function __construct(MarkdownConverterInterface $markdownConverter, ViewFactoryContract $viewFactory, FilesystemInterface $filesystem)
+    public function __construct(MarkdownConverterInterface $markdownConverter, ViewFactoryContract $viewFactory, FilesystemInterface $sourceFilesystem, FilesystemInterface $destinationFilesystem)
     {
         $this->markdownConverter = $markdownConverter;
         $this->viewFactory = $viewFactory;
-        $this->filesystem = $filesystem;
+        $this->sourceFilesystem = $sourceFilesystem;
+        $this->destinationFilesystem = $destinationFilesystem;
     }
 
     /**
@@ -48,6 +55,7 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * @param Post[] $posts
      * @param string|null $site
      * @return bool
+     * @throws FileNotFoundException
      */
     public function publish($posts, string $site = null)
     {
@@ -55,27 +63,34 @@ class FilesystemPostPublisher implements PostPublisherInterface
 
         $activePosts = [];
 
+        // Publish posts
         foreach ($posts as $post) {
 
             if ($post->deletedAt) {
                 try {
-                    $this->filesystem->delete($post->humanReadableUrl);
+                    $this->destinationFilesystem->delete($post->humanReadableUrl);
                 } catch (FileNotFoundException $e) {
                 }
                 continue;
             }
 
             $post->content = $this->markdownConverter->convertToHtml($post->content);
-            $result = $this->filesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site));
+            $success = $success && $this->destinationFilesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site));
 
-            if ($result == false) {
-                $success = false;
-            }
             array_push($activePosts, $post);
         }
 
-        if (false == $this->filesystem->put('index.html', $this->renderPostIndexView($activePosts, $site))) {
-            $success = false;
+        // Publish index file
+        $success = $success && $this->destinationFilesystem->put('index.html', $this->renderPostIndexView($activePosts, $site));
+
+        // Copy assets
+        $this->destinationFilesystem->deleteDir('assets');
+        $files = $this->sourceFilesystem->listContents('assets_to_publish' . DIRECTORY_SEPARATOR . $site);
+        foreach ($files as $file) {
+            if ($file['type'] == 'dir') {
+                continue;
+            }
+            $success = $success && $this->destinationFilesystem->put('assets' . DIRECTORY_SEPARATOR . $file['basename'], $this->sourceFilesystem->read($file['path']));
         }
 
         return $success;

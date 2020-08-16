@@ -10,9 +10,12 @@ use App\Support\DateTimeFactory;
 use App\Support\UniqueIdFactory;
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\S3\S3Client;
+use Illuminate\Contracts\View\Factory as ViewFactoryContract;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\MarkdownConverterInterface;
+use League\Flysystem\Adapter\AbstractAdapter;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\AwsS3v3\AwsS3Adapter;
 use League\Flysystem\Filesystem;
@@ -44,27 +47,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Filesystem
         $this->app->bind(FilesystemInterface::class, function ($app) {
-            if ($app['config']['filesystems.default'] == 's3') {
-                // S3
-                $client = new S3Client([
-                    'credentials' => [
-                        'key' => $app['config']['filesystems.disks.s3.key'],
-                        'secret' => $app['config']['filesystems.disks.s3.secret']
-                    ],
-                    'region' => $app['config']['filesystems.disks.s3.region'],
-                    'version' => 'latest'
-                ]);
-                $adapter = new AwsS3Adapter($client, $app['config']['filesystems.disks.s3.bucket']);
-            } else {
-                // Local
-                $adapter = new Local($app['config']['filesystems.disks.local.root']);
-            }
-
-            return new Filesystem($adapter);
+            return new Filesystem($this->getApplicationFilesystemAdapter($app));
         });
 
         // Publishers
-        $this->app->bind(PostPublisherInterface::class, FilesystemPostPublisher::class);
+        $this->app->bind(PostPublisherInterface::class, function ($app) {
+            $sourceFilesystem = new Filesystem($this->getApplicationFilesystemAdapter($app));
+            $destinationFilesystem = new Filesystem($this->getPublisherFilesystemAdapter($app));
+            return new FilesystemPostPublisher($this->app->make(MarkdownConverterInterface::class), $this->app->make(ViewFactoryContract::class), $sourceFilesystem, $destinationFilesystem);
+        });
 
         // Markdown
         $this->app->bind(MarkdownConverterInterface::class, CommonMarkConverter::class);
@@ -78,5 +69,55 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         //
+    }
+
+    /**
+     * Returns the filesystem adapter for this application
+     *
+     * @param Application $app
+     * @return AbstractAdapter
+     */
+    private function getApplicationFilesystemAdapter(Application $app)
+    {
+        if ($app['config']['filesystems.default'] == 's3') {
+            // S3
+            $client = new S3Client([
+                'credentials' => [
+                    'key' => $app['config']['filesystems.disks.s3.key'],
+                    'secret' => $app['config']['filesystems.disks.s3.secret']
+                ],
+                'region' => $app['config']['filesystems.disks.s3.region'],
+                'version' => 'latest'
+            ]);
+            return new AwsS3Adapter($client, $app['config']['filesystems.disks.s3.bucket']);
+        } else {
+            // Local
+            return new Local($app['config']['filesystems.disks.local.root']);
+        }
+    }
+
+    /**
+     * Returns the filesystem adapter for the Post publisher
+     *
+     * @param Application $app
+     * @return AbstractAdapter
+     */
+    private function getPublisherFilesystemAdapter(Application $app)
+    {
+        if ($app['config']['filesystems.publisher_default'] == 's3') {
+            // S3
+            $client = new S3Client([
+                'credentials' => [
+                    'key' => $app['config']['filesystems.publisher_disks.s3.key'],
+                    'secret' => $app['config']['filesystems.publisher_disks.s3.secret']
+                ],
+                'region' => $app['config']['filesystems.publisher_disks.s3.region'],
+                'version' => 'latest'
+            ]);
+            return new AwsS3Adapter($client, $app['config']['filesystems.publisher_disks.s3.bucket']);
+        } else {
+            // Local
+            return new Local($app['config']['filesystems.publisher_disks.local.root']);
+        }
     }
 }

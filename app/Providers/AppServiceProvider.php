@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
-use App\Repositories\EloquentPostRepository;
+use App\Repositories\AwsDynamoDbPostRepository;
 use App\Repositories\PostRepositoryInterface;
 use App\Services\FilesystemPostPublisher;
 use App\Services\PostPublisherInterface;
+use App\Support\DateTimeFactory;
+use App\Support\UniqueIdFactory;
+use Aws\DynamoDb\DynamoDbClient;
 use Aws\S3\S3Client;
 use Illuminate\Support\ServiceProvider;
 use League\CommonMark\CommonMarkConverter;
@@ -25,7 +28,19 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         // Repositories
-        $this->app->bind(PostRepositoryInterface::class, EloquentPostRepository::class);
+        //$this->app->bind(PostRepositoryInterface::class, EloquentPostRepository::class);
+        $this->app->bind(PostRepositoryInterface::class, function ($app) {
+            $client = new DynamoDbClient([
+                'credentials' => [
+                    'key' => $app['config']['database.connections.dynamodb.key'],
+                    'secret' => $app['config']['database.connections.dynamodb.secret']
+                ],
+                'region' => $app['config']['database.connections.dynamodb.region'],
+                'version' => 'latest'
+            ]);
+
+            return new AwsDynamoDbPostRepository($client, $app['config']['database.connections.dynamodb.table'], new DateTimeFactory(), new UniqueIdFactory());
+        });
 
         // Filesystem
         $this->app->bind(FilesystemInterface::class, function ($app) {

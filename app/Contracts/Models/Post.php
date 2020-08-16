@@ -8,7 +8,7 @@ use DateTime;
 
 class Post
 {
-    public int $id;
+    public $id;
     public string $title;
     public string $content;
     public string $humanReadableUrl;
@@ -27,7 +27,7 @@ class Post
      * @param DateTime $updatedAt
      * @param DateTime|null $deletedAt
      */
-    public function __construct(int $id, string $title, string $content, string $humanReadableUrl, DateTime $createdAt, DateTime $updatedAt, ?Datetime $deletedAt)
+    public function __construct($id, string $title, string $content, string $humanReadableUrl, DateTime $createdAt, DateTime $updatedAt, ?Datetime $deletedAt)
     {
         $this->id = $id;
         $this->title = $title;

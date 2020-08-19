@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers;
 
 use App\Contracts\Models\Post;
+use App\Http\Middleware\AuthenticateByIp;
 use App\Repositories\PostRepositoryInterface;
 use DateTime;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -12,6 +13,14 @@ use Tests\TestCase;
 
 class PostControllerTest extends TestCase
 {
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        // Exclude middleware that checks for trusted IP
+        $this->withoutMiddleware(AuthenticateByIp::class);
+    }
+
     /**
      * Test index method
      *

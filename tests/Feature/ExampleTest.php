@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\AuthenticateByIp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,6 +15,8 @@ class ExampleTest extends TestCase
      */
     public function testBasicTest()
     {
+        $this->withoutMiddleware(AuthenticateByIp::class);
+
         $response = $this->get('/');
 
         $response->assertStatus(200);

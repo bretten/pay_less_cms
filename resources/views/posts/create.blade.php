@@ -8,7 +8,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <form method="POST" action="/posts">
+        <form method="POST" action="/{{ Route::prefix(config('app.url_prefix'))->get("posts")->uri() }}">
             @csrf
 
             <div class="form-group">
@@ -27,7 +27,7 @@
             </div>
 
             <button type="submit" class="btn btn-primary">Submit</button>
-            <a class="btn btn-light" href="/posts" role="button">Cancel</a>
+            <a class="btn btn-light" href="/{{ Route::prefix(config('app.url_prefix'))->get("posts")->uri() }}" role="button">Cancel</a>
         </form>
     </div>
 @endsection

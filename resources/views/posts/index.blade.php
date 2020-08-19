@@ -8,7 +8,7 @@
 
 @section('content')
     <div class="container-fluid text-right">
-        <a class="btn btn-primary" href="/posts/create" role="button">New Post</a>
+        <a class="btn btn-primary" href="/{{ Route::prefix(config('app.url_prefix'))->get('posts/create')->uri() }}" role="button">New Post</a>
     </div>
     <div class="container-fluid mt-3">
         <table class="table">
@@ -28,15 +28,15 @@
             @foreach($posts as $post)
                 <tr>
                     <th>{{ $post->id }}</th>
-                    <td><a href="/posts/{{ $post->id }}">{{ $post->title }}</a></td>
+                    <td><a href="/{{ Route::prefix(config('app.url_prefix'))->get("posts/$post->id")->uri() }}">{{ $post->title }}</a></td>
                     <td>{{ $post->humanReadableUrl }}</td>
                     <td>{{ $post->content }}</td>
                     <td>{{ $post->createdAt->format('Y-m-d H:i:s') }}</td>
                     <td>{{ $post->updatedAt->format('Y-m-d H:i:s') }}</td>
-                    <td><a class="btn btn-light" href="/posts/{{ $post->id }}/edit" role="button">Edit</a></td>
+                    <td><a class="btn btn-light" href="/{{ Route::prefix(config('app.url_prefix'))->get("posts/$post->id/edit")->uri() }}" role="button">Edit</a></td>
                     <td>
                         @if (!$post->deletedAt)
-                            <form method="POST" action="/posts/{{ $post->id }}" id="post-{{ $post->id }}">
+                            <form method="POST" action="/{{ Route::prefix(config('app.url_prefix'))->get("posts/$post->id")->uri() }}" id="post-{{ $post->id }}">
                                 @method('DELETE')
                                 @csrf
                                 <button type="submit" class="btn btn-danger"

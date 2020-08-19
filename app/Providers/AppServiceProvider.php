@@ -85,7 +85,8 @@ class AppServiceProvider extends ServiceProvider
             $client = new S3Client([
                 'credentials' => [
                     'key' => $app['config']['filesystems.disks.s3.key'],
-                    'secret' => $app['config']['filesystems.disks.s3.secret']
+                    'secret' => $app['config']['filesystems.disks.s3.secret'],
+                    'token' => $app['config']['filesystems.disks.s3.token']
                 ],
                 'region' => $app['config']['filesystems.disks.s3.region'],
                 'version' => 'latest'
@@ -110,7 +111,8 @@ class AppServiceProvider extends ServiceProvider
             $client = new S3Client([
                 'credentials' => [
                     'key' => $app['config']['filesystems.publisher_disks.s3.key'],
-                    'secret' => $app['config']['filesystems.publisher_disks.s3.secret']
+                    'secret' => $app['config']['filesystems.publisher_disks.s3.secret'],
+                    'token' => $app['config']['filesystems.publisher_disks.s3.token']
                 ],
                 'region' => $app['config']['filesystems.publisher_disks.s3.region'],
                 'version' => 'latest'

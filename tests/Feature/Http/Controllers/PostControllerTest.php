@@ -8,6 +8,7 @@ use App\Repositories\PostRepositoryInterface;
 use DateTime;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Route;
 use Mockery;
 use Tests\TestCase;
 
@@ -83,7 +84,7 @@ class PostControllerTest extends TestCase
         ]);
 
         // Assert
-        $response->assertRedirect('/posts');
+        $response->assertRedirect(Route::prefix(config('app.url_prefix'))->get('posts')->uri());
     }
 
     /**
@@ -235,7 +236,7 @@ class PostControllerTest extends TestCase
         ]);
 
         // Assert
-        $response->assertRedirect('/posts');
+        $response->assertRedirect(Route::prefix(config('app.url_prefix'))->get('posts')->uri());
     }
 
     /**
@@ -283,7 +284,7 @@ class PostControllerTest extends TestCase
         $response = $this->delete('/posts/1');
 
         // Assert
-        $response->assertRedirect('/posts');
+        $response->assertRedirect(Route::prefix(config('app.url_prefix'))->get('posts')->uri());
     }
 
     /**

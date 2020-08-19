@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Contracts\Models\Post;
 use App\Repositories\PostRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 class PostController extends Controller
 {
@@ -62,7 +63,7 @@ class PostController extends Controller
             $request->input('human_readable_url')
         );
         if ($result) {
-            return redirect('/posts');
+            return redirect(Route::prefix(config('app.url_prefix'))->get('posts')->uri());
         } else {
             return response('Server error', 500);
         }
@@ -110,7 +111,7 @@ class PostController extends Controller
             $request->input('human_readable_url')
         );
         if ($result) {
-            return redirect('/posts');
+            return redirect(Route::prefix(config('app.url_prefix'))->get('posts')->uri());
         } else {
             return response('Server error', 500);
         }
@@ -127,7 +128,7 @@ class PostController extends Controller
         $result = $this->repository->delete($id);
 
         if ($result) {
-            return redirect('/posts');
+            return redirect(Route::prefix(config('app.url_prefix'))->get('posts')->uri());
         } else {
             return response('Server error', 500);
         }

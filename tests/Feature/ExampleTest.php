@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Middleware\AuthenticateByIp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -19,6 +20,6 @@ class ExampleTest extends TestCase
 
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response->assertRedirect(Route::prefix(config('app.url_prefix'))->get('posts')->uri());
     }
 }

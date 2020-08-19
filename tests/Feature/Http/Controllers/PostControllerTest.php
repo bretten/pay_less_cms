@@ -83,7 +83,7 @@ class PostControllerTest extends TestCase
         ]);
 
         // Assert
-        $response->assertRedirect('/posts');
+        $response->assertRedirect('/');
     }
 
     /**
@@ -235,7 +235,7 @@ class PostControllerTest extends TestCase
         ]);
 
         // Assert
-        $response->assertRedirect('/posts');
+        $response->assertRedirect('/');
     }
 
     /**
@@ -283,7 +283,7 @@ class PostControllerTest extends TestCase
         $response = $this->delete('/posts/1');
 
         // Assert
-        $response->assertRedirect('/posts');
+        $response->assertRedirect('/');
     }
 
     /**

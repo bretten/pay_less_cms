@@ -62,7 +62,7 @@ class PostController extends Controller
             $request->input('human_readable_url')
         );
         if ($result) {
-            return redirect('/posts');
+            return redirect('/');
         } else {
             return response('Server error', 500);
         }
@@ -110,7 +110,7 @@ class PostController extends Controller
             $request->input('human_readable_url')
         );
         if ($result) {
-            return redirect('/posts');
+            return redirect('/');
         } else {
             return response('Server error', 500);
         }
@@ -127,7 +127,7 @@ class PostController extends Controller
         $result = $this->repository->delete($id);
 
         if ($result) {
-            return redirect('/posts');
+            return redirect('/');
         } else {
             return response('Server error', 500);
         }

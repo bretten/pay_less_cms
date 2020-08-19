@@ -36,7 +36,8 @@ class AppServiceProvider extends ServiceProvider
             $client = new DynamoDbClient([
                 'credentials' => [
                     'key' => $app['config']['database.connections.dynamodb.key'],
-                    'secret' => $app['config']['database.connections.dynamodb.secret']
+                    'secret' => $app['config']['database.connections.dynamodb.secret'],
+                    'token' => $app['config']['database.connections.dynamodb.token']
                 ],
                 'region' => $app['config']['database.connections.dynamodb.region'],
                 'version' => 'latest'

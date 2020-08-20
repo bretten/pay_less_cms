@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Repositories\AwsDynamoDbPostRepository;
+use App\Repositories\EloquentPostRepository;
 use App\Repositories\PostRepositoryInterface;
 use App\Services\FilesystemPostPublisher;
 use App\Services\PostPublisherInterface;
@@ -31,20 +32,23 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         // Repositories
-        //$this->app->bind(PostRepositoryInterface::class, EloquentPostRepository::class);
-        $this->app->bind(PostRepositoryInterface::class, function ($app) {
-            $client = new DynamoDbClient([
-                'credentials' => [
-                    'key' => $app['config']['database.connections.dynamodb.key'],
-                    'secret' => $app['config']['database.connections.dynamodb.secret'],
-                    'token' => $app['config']['database.connections.dynamodb.token']
-                ],
-                'region' => $app['config']['database.connections.dynamodb.region'],
-                'version' => 'latest'
-            ]);
+        if ($this->app['config']['database.default'] == 'dynamodb') {
+            $this->app->bind(PostRepositoryInterface::class, function ($app) {
+                $client = new DynamoDbClient([
+                    'credentials' => [
+                        'key' => $app['config']['database.connections.dynamodb.key'],
+                        'secret' => $app['config']['database.connections.dynamodb.secret'],
+                        'token' => $app['config']['database.connections.dynamodb.token']
+                    ],
+                    'region' => $app['config']['database.connections.dynamodb.region'],
+                    'version' => 'latest'
+                ]);
 
-            return new AwsDynamoDbPostRepository($client, $app['config']['database.connections.dynamodb.table'], new DateTimeFactory(), new UniqueIdFactory());
-        });
+                return new AwsDynamoDbPostRepository($client, $app['config']['database.connections.dynamodb.table'], new DateTimeFactory(), new UniqueIdFactory());
+            });
+        } else {
+            $this->app->bind(PostRepositoryInterface::class, EloquentPostRepository::class);
+        }
 
         // Filesystem
         $this->app->bind(FilesystemInterface::class, function ($app) {

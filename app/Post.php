@@ -17,6 +17,6 @@ class Post extends Model
      */
     public function toSimple()
     {
-        return new PostContract($this->id, $this->title, $this->content, $this->human_readable_url, $this->created_at, $this->updated_at, $this->deleted_at);
+        return new PostContract($this->id, $this->site, $this->title, $this->content, $this->human_readable_url, $this->created_at, $this->updated_at, $this->deleted_at);
     }
 }

@@ -26,23 +26,25 @@ interface PostRepositoryInterface
     /**
      * Should create a new Post
      *
+     * @param string $site
      * @param string $title
      * @param string $content
      * @param string $humanReadableUrl
      * @return bool
      */
-    public function create(string $title, string $content, string $humanReadableUrl);
+    public function create(string $site, string $title, string $content, string $humanReadableUrl);
 
     /**
      * Should update a Post
      *
      * @param $id
+     * @param string $site
      * @param string $title
      * @param string $content
      * @param string $humanReadableUrl
      * @return bool
      */
-    public function update($id, string $title, string $content, string $humanReadableUrl);
+    public function update($id, string $site, string $title, string $content, string $humanReadableUrl);
 
     /**
      * Should delete a Post

@@ -6,6 +6,7 @@ use App\Contracts\Models\Post;
 use App\Repositories\PostRepositoryInterface;
 use App\Services\PostPublisherInterface;
 use Illuminate\Console\Command;
+use Illuminate\Foundation\Application;
 
 class PublishPosts extends Command
 {
@@ -38,29 +39,53 @@ class PublishPosts extends Command
      *
      * @param PostRepositoryInterface $repo
      * @param PostPublisherInterface $publisher
-     * @return int
+     * @param Application $app
+     * @return void
      */
-    public function handle(PostRepositoryInterface $repo, PostPublisherInterface $publisher)
+    public function handle(PostRepositoryInterface $repo, PostPublisherInterface $publisher, Application $app)
     {
-        $posts = $repo->getAll();
-        if (!$posts) {
+        $sites = ($this->option('site') ? [$this->option('site')] : null) ?? $app['config']['app.managed_sites'];
+
+        $allPosts = $repo->getAll();
+        if (!$allPosts) {
             $this->warn("No posts to publish");
-            return 0;
+            return;
         }
 
-        usort($posts, function (Post $a, Post $b) {
+        foreach ($sites as $site) {
+            $this->publishSite($publisher, $site, $allPosts);
+        }
+    }
+
+    /**
+     * Filters the Posts by the specified site and then publishes the Posts
+     *
+     * @param PostPublisherInterface $publisher
+     * @param string $site
+     * @param array $allPosts
+     * @return bool
+     */
+    private function publishSite(PostPublisherInterface $publisher, string $site, array $allPosts)
+    {
+        // Get posts for the site
+        $sitePosts = array_filter($allPosts, function ($post) use ($site) {
+            return $post->site == $site;
+        });
+
+        // Order by creation date desc
+        usort($sitePosts, function (Post $a, Post $b) {
             return $b->createdAt->getTimestamp() - $a->createdAt->getTimestamp();
         });
 
-        $result = $publisher->publish($posts, $this->option('site'));
+        $result = $publisher->publish($sitePosts, $site);
 
         if ($result) {
-            $this->line("Successfully published all posts");
-            return 1;
+            $this->line("Successfully published " . count($sitePosts) . " posts for $site");
+            return true;
         } else {
             // TODO: Provide more insight from publisher on what went wrong
-            $this->error("Could not publish posts");
-            return 0;
+            $this->error("Could not publish posts for $site");
+            return false;
         }
     }
 }

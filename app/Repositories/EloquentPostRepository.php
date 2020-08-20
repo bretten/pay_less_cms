@@ -51,13 +51,15 @@ class EloquentPostRepository implements PostRepositoryInterface
     /**
      * Creates a new Post with the specified parameters
      *
+     * @param string $site
      * @param string $title
      * @param string $content
      * @param string $humanReadableUrl
      * @return bool
      */
-    public function create(string $title, string $content, string $humanReadableUrl)
+    public function create(string $site, string $title, string $content, string $humanReadableUrl)
     {
+        $this->model->site = $site;
         $this->model->title = $title;
         $this->model->content = $content;
         $this->model->human_readable_url = $humanReadableUrl;
@@ -68,14 +70,16 @@ class EloquentPostRepository implements PostRepositoryInterface
      * Updates the Post indicated by the ID with the new parameters
      *
      * @param $id
+     * @param string $site
      * @param string $title
      * @param string $content
      * @param string $humanReadableUrl
      * @return bool
      */
-    public function update($id, string $title, string $content, string $humanReadableUrl)
+    public function update($id, string $site, string $title, string $content, string $humanReadableUrl)
     {
         $this->model = $this->model->find($id);
+        $this->model->site = $site;
         $this->model->title = $title;
         $this->model->content = $content;
         $this->model->human_readable_url = $humanReadableUrl;

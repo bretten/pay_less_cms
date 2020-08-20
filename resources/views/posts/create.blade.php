@@ -12,6 +12,11 @@
             @csrf
 
             <div class="form-group">
+                <label for="post-site">Site</label>
+                <input type="text" class="form-control" id="post-site" name="site">
+            </div>
+
+            <div class="form-group">
                 <label for="post-title">Title</label>
                 <input type="text" class="form-control" id="post-title" name="title">
             </div>

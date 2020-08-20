@@ -15,6 +15,7 @@
             <thead class="thead-dark">
             <tr>
                 <th>Id</th>
+                <th>Site</th>
                 <th>Title</th>
                 <th>Url</th>
                 <th>Content</th>
@@ -28,6 +29,7 @@
             @foreach($posts as $post)
                 <tr>
                     <th>{{ $post->id }}</th>
+                    <th>{{ $post->site }}</th>
                     <td><a href="/{{ Route::prefix(config('app.url_prefix'))->get("posts/$post->id")->uri() }}">{{ $post->title }}</a></td>
                     <td>{{ $post->humanReadableUrl }}</td>
                     <td>{{ $post->content }}</td>

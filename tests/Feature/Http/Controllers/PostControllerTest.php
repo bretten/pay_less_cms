@@ -30,8 +30,8 @@ class PostControllerTest extends TestCase
     public function testIndex()
     {
         // Setup
-        $post1 = new Post(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
-        $post2 = new Post(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
+        $post1 = new Post(1, 'site1', 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $post2 = new Post(2, 'site1', 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
         $posts = [
             $post1, $post2
         ];
@@ -71,13 +71,14 @@ class PostControllerTest extends TestCase
         // Setup
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
             $mock->shouldReceive('create')
-                ->with('title1', 'content1', 'human-readable-url1')
+                ->with('site1', 'title1', 'content1', 'human-readable-url1')
                 ->andReturn(true);
         });
         $this->app->instance(PostRepositoryInterface::class, $repo);
 
         // Execute
         $response = $this->post('/posts', [
+            'site' => 'site1',
             'title' => 'title1',
             'content' => 'content1',
             'human_readable_url' => 'human-readable-url1'
@@ -97,13 +98,14 @@ class PostControllerTest extends TestCase
         // Setup
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
             $mock->shouldReceive('create')
-                ->with('title1', 'content1', 'human-readable-url1')
+                ->with('site1', 'title1', 'content1', 'human-readable-url1')
                 ->andReturn(false);
         });
         $this->app->instance(PostRepositoryInterface::class, $repo);
 
         // Execute
         $response = $this->post('/posts', [
+            'site' => 'site1',
             'title' => 'title1',
             'content' => 'content1',
             'human_readable_url' => 'human-readable-url1'
@@ -122,7 +124,7 @@ class PostControllerTest extends TestCase
     public function testShow()
     {
         // Setup
-        $post = new Post(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $post = new Post(1, 'site1', 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
 
         $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.published.show', ['post' => $post]);
 
@@ -171,7 +173,7 @@ class PostControllerTest extends TestCase
     public function testEdit()
     {
         // Setup
-        $post = new Post(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $post = new Post(1, 'site1', 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
 
         $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.edit', ['post' => $post]);
 
@@ -223,13 +225,14 @@ class PostControllerTest extends TestCase
         // Setup
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
             $mock->shouldReceive('update')
-                ->with(1, 'title1 v2', 'content1 v2', 'human-readable-url1-v2')
+                ->with(1, 'site1 v2', 'title1 v2', 'content1 v2', 'human-readable-url1-v2')
                 ->andReturn(true);
         });
         $this->app->instance(PostRepositoryInterface::class, $repo);
 
         // Execute
         $response = $this->put('/posts/1', [
+            'site' => 'site1 v2',
             'title' => 'title1 v2',
             'content' => 'content1 v2',
             'human_readable_url' => 'human-readable-url1-v2'
@@ -249,13 +252,14 @@ class PostControllerTest extends TestCase
         // Setup
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) {
             $mock->shouldReceive('update')
-                ->with('title1 v2', 'content1 v2', 'human-readable-url1-v2')
+                ->with(1, 'site1 v2', 'title1 v2', 'content1 v2', 'human-readable-url1-v2')
                 ->andReturn(false);
         });
         $this->app->instance(PostRepositoryInterface::class, $repo);
 
         // Execute
         $response = $this->put('/posts/1', [
+            'site' => 'site1 v2',
             'title' => 'title1 v2',
             'content' => 'content1 v2',
             'human_readable_url' => 'human-readable-url1-v2'

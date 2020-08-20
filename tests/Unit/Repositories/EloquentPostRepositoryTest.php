@@ -24,13 +24,13 @@ class EloquentPostRepositoryTest extends TestCase
     public function testGetAll()
     {
         // Setup
-        $expectedPost1 = new PostContract(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
-        $expectedPost2 = new PostContract(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
+        $expectedPost1 = new PostContract(1, 'site1', 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $expectedPost2 = new PostContract(2, 'site1', 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
         $expectedPosts = [
             $expectedPost1, $expectedPost2
         ];
-        $eloquentPost1 = EloquentMocker::mockPost(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
-        $eloquentPost2 = EloquentMocker::mockPost(2, 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
+        $eloquentPost1 = EloquentMocker::mockPost(1, 'site1', 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $eloquentPost2 = EloquentMocker::mockPost(2, 'site1', 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
         $eloquentPosts = [
             $eloquentPost1, $eloquentPost2
         ];
@@ -61,8 +61,8 @@ class EloquentPostRepositoryTest extends TestCase
     public function testGetById()
     {
         // Setup
-        $expectedPost = new PostContract(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
-        $eloquentPost = EloquentMocker::mockPost(1, 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $expectedPost = new PostContract(1, 'site1', 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
+        $eloquentPost = EloquentMocker::mockPost(1, 'site1', 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null,);
         $post = Mockery::mock(Post::class, function ($mock) use ($eloquentPost) {
             $mock->shouldReceive('findOrFail')
                 ->with(1)
@@ -111,6 +111,9 @@ class EloquentPostRepositoryTest extends TestCase
         $expected = true;
         $post = Mockery::mock(Post::class, function ($mock) use ($expected) {
             $mock->shouldReceive('setAttribute')
+                ->with('site', 'site1')
+                ->times(1);
+            $mock->shouldReceive('setAttribute')
                 ->with('title', 'title1')
                 ->times(1);
             $mock->shouldReceive('setAttribute')
@@ -125,7 +128,7 @@ class EloquentPostRepositoryTest extends TestCase
         $repo = new EloquentPostRepository($post);
 
         // Execute
-        $result = $repo->create("title1", "content1", "human-readable-url1");
+        $result = $repo->create('site1', 'title1', 'content1', 'human-readable-url1');
 
         // Assert
         $this->assertEquals($expected, $result);
@@ -147,6 +150,9 @@ class EloquentPostRepositoryTest extends TestCase
                 ->times(1)
                 ->andReturn($mock);
             $mock->shouldReceive('setAttribute')
+                ->with('site', 'site1 v2')
+                ->times(1);
+            $mock->shouldReceive('setAttribute')
                 ->with('title', 'title1 v2')
                 ->times(1);
             $mock->shouldReceive('setAttribute')
@@ -161,7 +167,7 @@ class EloquentPostRepositoryTest extends TestCase
         $repo = new EloquentPostRepository($post);
 
         // Execute
-        $result = $repo->update($id, "title1 v2", "content1 v2", "human-readable-url1-v2");
+        $result = $repo->update($id, 'site1 v2', 'title1 v2', 'content1 v2', 'human-readable-url1-v2');
 
         // Assert
         $this->assertEquals($expected, $result);

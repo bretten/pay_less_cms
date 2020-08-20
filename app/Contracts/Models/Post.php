@@ -9,6 +9,7 @@ use DateTime;
 class Post
 {
     public $id;
+    public string $site;
     public string $title;
     public string $content;
     public string $humanReadableUrl;
@@ -20,6 +21,7 @@ class Post
      * Post constructor.
      *
      * @param int $id
+     * @param string $site
      * @param string $title
      * @param string $content
      * @param string $humanReadableUrl
@@ -27,9 +29,10 @@ class Post
      * @param DateTime $updatedAt
      * @param DateTime|null $deletedAt
      */
-    public function __construct($id, string $title, string $content, string $humanReadableUrl, DateTime $createdAt, DateTime $updatedAt, ?Datetime $deletedAt)
+    public function __construct($id, string $site, string $title, string $content, string $humanReadableUrl, DateTime $createdAt, DateTime $updatedAt, ?Datetime $deletedAt)
     {
         $this->id = $id;
+        $this->site = $site;
         $this->title = $title;
         $this->content = $content;
         $this->humanReadableUrl = $humanReadableUrl;

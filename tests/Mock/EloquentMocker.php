@@ -14,6 +14,7 @@ class EloquentMocker
      * Mocks an Eloquent Post
      *
      * @param int $id
+     * @param string $site
      * @param string $title
      * @param string $content
      * @param string $human_readable_url
@@ -22,11 +23,13 @@ class EloquentMocker
      * @param $deleted_at
      * @return Mockery\Mock
      */
-    public static function mockPost(int $id, string $title, string $content, string $human_readable_url, DateTime $created_at, DateTime $updated_at, $deleted_at)
+    public static function mockPost(int $id, string $site, string $title, string $content, string $human_readable_url, DateTime $created_at, DateTime $updated_at, $deleted_at)
     {
-        return Mockery::mock(Post::class, function ($mock) use ($id, $title, $content, $human_readable_url, $created_at, $updated_at, $deleted_at) {
+        return Mockery::mock(Post::class, function ($mock) use ($id, $site, $title, $content, $human_readable_url, $created_at, $updated_at, $deleted_at) {
             $mock->shouldReceive('getAttribute')->with('id')
                 ->andReturn($id);
+            $mock->shouldReceive('getAttribute')->with('site')
+                ->andReturn($site);
             $mock->shouldReceive('getAttribute')->with('title')
                 ->andReturn($title);
             $mock->shouldReceive('getAttribute')->with('content')

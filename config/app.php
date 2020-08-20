@@ -240,4 +240,15 @@ return [
 
     'url_prefix' => env('APP_URL_PREFIX'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Managed sites
+    |--------------------------------------------------------------------------
+    |
+    | The different sites that are managed by the application
+    |
+    */
+
+    'managed_sites' => str_getcsv(env('MANAGED_SITES')),
+
 ];

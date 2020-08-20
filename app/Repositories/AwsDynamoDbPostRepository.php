@@ -103,17 +103,18 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
     /**
      * Creates a new Post with the specified parameters
      *
+     * @param string $site
      * @param string $title
      * @param string $content
      * @param string $humanReadableUrl
      * @return bool
-     * @throws \Exception
      */
-    public function create(string $title, string $content, string $humanReadableUrl)
+    public function create(string $site, string $title, string $content, string $humanReadableUrl)
     {
         $now = $this->dateTimeFactory->getUtcNow();
         $post = [
             'id' => $this->uniqueIdFactory->generateUniqueId(),
+            'site' => $site,
             'title' => $title,
             'content' => $content,
             'human_readable_url' => $humanReadableUrl,
@@ -132,13 +133,13 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
      * Updates the Post indicated by the ID with the new parameters
      *
      * @param $id
+     * @param string $site
      * @param string $title
      * @param string $content
      * @param string $humanReadableUrl
      * @return bool
-     * @throws \Exception
      */
-    public function update($id, string $title, string $content, string $humanReadableUrl)
+    public function update($id, string $site, string $title, string $content, string $humanReadableUrl)
     {
         $now = $this->dateTimeFactory->getUtcNow();
         $result = $this->client->updateItem([
@@ -146,8 +147,9 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
             'Key' => $this->marshaler->marshalItem([
                 'id' => $id
             ]),
-            'UpdateExpression' => 'set title = :t, content = :c, human_readable_url = :url, updated_at = :ua',
+            'UpdateExpression' => 'set site = :s, title = :t, content = :c, human_readable_url = :url, updated_at = :ua',
             'ExpressionAttributeValues' => $this->marshaler->marshalItem([
+                ':s' => $site,
                 ':t' => $title,
                 ':c' => $content,
                 ':url' => $humanReadableUrl,
@@ -191,7 +193,7 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
     private function unmarshalPost($item)
     {
         $item = $this->marshaler->unmarshalItem($item);
-        return new Post($item['id'], $item['title'], $item['content'], $item['human_readable_url'],
+        return new Post($item['id'], $item['site'], $item['title'], $item['content'], $item['human_readable_url'],
             new DateTime('@' . $item['created_at'], new DateTimeZone('UTC')),
             new DateTime('@' . $item['updated_at'], new DateTimeZone('UTC')),
             $item['deleted_at'] ? new DateTime('@' . $item['deleted_at'], new DateTimeZone('UTC')) : null);

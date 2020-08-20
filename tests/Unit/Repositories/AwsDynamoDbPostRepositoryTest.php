@@ -37,6 +37,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                     'Items' => [
                         [
                             'id' => ['N' => 1],
+                            'site' => ['S' => 'site1'],
                             'title' => ['S' => 'title1'],
                             'content' => ['S' => 'content1'],
                             'human_readable_url' => ['S' => 'url1'],
@@ -46,6 +47,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                         ],
                         [
                             'id' => ['N' => 2],
+                            'site' => ['S' => 'site1'],
                             'title' => ['S' => 'title2'],
                             'content' => ['S' => 'content2'],
                             'human_readable_url' => ['S' => 'url2'],
@@ -64,6 +66,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                     'Items' => [
                         [
                             'id' => ['N' => 3],
+                            'site' => ['S' => 'site2'],
                             'title' => ['S' => 'title3'],
                             'content' => ['S' => 'content3'],
                             'human_readable_url' => ['S' => 'url3'],
@@ -77,9 +80,9 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         $repo = new AwsDynamoDbPostRepository($client, $table, Mockery::mock(DateTimeFactoryInterface::class), Mockery::mock(UniqueIdFactoryInterface::class));
 
         $expectedPosts = [
-            new Post(1, 'title1', 'content1', 'url1', new DateTime('@1597553412', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), null),
-            new Post(2, 'title2', 'content2', 'url2', new DateTime('@1597553422', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC'))),
-            new Post(3, 'title3', 'content3', 'url3', new DateTime('@1597553432', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), null),
+            new Post(1, 'site1', 'title1', 'content1', 'url1', new DateTime('@1597553412', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), null),
+            new Post(2, 'site1', 'title2', 'content2', 'url2', new DateTime('@1597553422', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC'))),
+            new Post(3, 'site2', 'title3', 'content3', 'url3', new DateTime('@1597553432', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), null),
         ];
 
         // Execute
@@ -110,6 +113,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                 ->andReturn(new Result([
                     'Item' => [
                         'id' => ['N' => 1],
+                        'site' => ['S' => 'site1'],
                         'title' => ['S' => 'title1'],
                         'content' => ['S' => 'content1'],
                         'human_readable_url' => ['S' => 'url1'],
@@ -121,7 +125,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         });
         $repo = new AwsDynamoDbPostRepository($client, $table, Mockery::mock(DateTimeFactoryInterface::class), Mockery::mock(UniqueIdFactoryInterface::class));
 
-        $expectedPost = new Post(1, 'title1', 'content1', 'url1', new DateTime('@1597553412', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), null);
+        $expectedPost = new Post(1, 'site1', 'title1', 'content1', 'url1', new DateTime('@1597553412', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), null);
 
         // Execute
         $result = $repo->getById(1);
@@ -158,6 +162,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                     'TableName' => $table,
                     'Item' => [
                         'id' => ['N' => 1],
+                        'site' => ['S' => 'site1'],
                         'title' => ['S' => 'title1'],
                         'content' => ['S' => 'content1'],
                         'human_readable_url' => ['S' => 'url1'],
@@ -175,7 +180,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         $repo = new AwsDynamoDbPostRepository($client, $table, $dateTimeFactory, $uniqueIdFactory);
 
         // Execute
-        $result = $repo->create('title1', 'content1', 'url1');
+        $result = $repo->create('site1', 'title1', 'content1', 'url1');
 
         // Assert
         $this->assertTrue($result);
@@ -192,6 +197,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         // Setup
         $table = 'test-table';
         $id = 1;
+        $site = 'site1 v2';
         $title = 'title1 v2';
         $content = 'content1 v2';
         $url = 'url1 v2';
@@ -201,15 +207,16 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                 ->times(1)
                 ->andReturn($now);
         });
-        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table, $id, $title, $content, $url, $now) {
+        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table, $id, $site, $title, $content, $url, $now) {
             $mock->shouldReceive('updateItem')
                 ->with([
                     'TableName' => $table,
                     'Key' => [
                         'id' => ['N' => $id]
                     ],
-                    'UpdateExpression' => 'set title = :t, content = :c, human_readable_url = :url, updated_at = :ua',
+                    'UpdateExpression' => 'set site = :s, title = :t, content = :c, human_readable_url = :url, updated_at = :ua',
                     'ExpressionAttributeValues' => [
+                        ':s' => ['S' => $site],
                         ':t' => ['S' => $title],
                         ':c' => ['S' => $content],
                         ':url' => ['S' => $url],
@@ -225,7 +232,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         $repo = new AwsDynamoDbPostRepository($client, $table, $dateTimeFactory, Mockery::Mock(UniqueIdFactoryInterface::class));
 
         // Execute
-        $result = $repo->update($id, $title, $content, $url);
+        $result = $repo->update($id, $site, $title, $content, $url);
 
         // Assert
         $this->assertTrue($result);

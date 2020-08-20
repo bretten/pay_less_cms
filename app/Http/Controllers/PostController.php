@@ -58,6 +58,7 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $result = $this->repository->create(
+            $request->input('site'),
             $request->input('title'),
             $request->input('content'),
             $request->input('human_readable_url')
@@ -106,6 +107,7 @@ class PostController extends Controller
     {
         $result = $this->repository->update(
             $id,
+            $request->input('site'),
             $request->input('title'),
             $request->input('content'),
             $request->input('human_readable_url')

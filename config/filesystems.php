@@ -90,6 +90,12 @@ return [
     |
     | Disks that are used by the Post publisher
     |
+    | managed_sites_local_root_dirs = Local filesystem root directories that correspond to each managed site.
+    | They should match the order of the 'managed_sites' setting.
+    |
+    | managed_sites_buckets = AWS S3 Buckets that correspond to each managed site. They should match
+    | the order of the 'managed_sites' setting.
+    |
     */
 
     'publisher_default' => env('FILESYSTEM_PUBLISHER_DRIVER', 'local'),
@@ -99,6 +105,7 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app') . '/published',
+            'managed_sites_local_root_dirs' => str_getcsv(env('PUBLISHER_MANAGED_SITES_LOCAL_ROOT_DIRS'))
         ],
 
         's3' => [
@@ -107,9 +114,9 @@ return [
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'token' => env('AWS_SESSION_TOKEN'),
             'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_PUBLISHER_BUCKET'),
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
+            'managed_sites_buckets' => str_getcsv(env('PUBLISHER_MANAGED_SITES_S3_BUCKETS'))
         ],
 
     ],

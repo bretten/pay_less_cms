@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Repositories\AwsDynamoDbPostRepository;
 use App\Repositories\EloquentPostRepository;
 use App\Repositories\PostRepositoryInterface;
+use App\Services\AwsS3SiteFilesystemFactory;
 use App\Services\FilesystemPostPublisher;
+use App\Services\LocalSiteFilesystemFactory;
 use App\Services\PostPublisherInterface;
 use App\Support\DateTimeFactory;
 use App\Support\UniqueIdFactory;
@@ -58,8 +60,8 @@ class AppServiceProvider extends ServiceProvider
         // Publishers
         $this->app->bind(PostPublisherInterface::class, function ($app) {
             $sourceFilesystem = new Filesystem($this->getApplicationFilesystemAdapter($app));
-            $destinationFilesystem = new Filesystem($this->getPublisherFilesystemAdapter($app));
-            return new FilesystemPostPublisher($this->app->make(MarkdownConverterInterface::class), $this->app->make(ViewFactoryContract::class), $sourceFilesystem, $destinationFilesystem);
+            $destinationFilesystemFactory = $this->getPublisherFilesystemFactory($app);
+            return new FilesystemPostPublisher($this->app->make(MarkdownConverterInterface::class), $this->app->make(ViewFactoryContract::class), $sourceFilesystem, $destinationFilesystemFactory);
         });
 
         // Markdown
@@ -125,6 +127,46 @@ class AppServiceProvider extends ServiceProvider
         } else {
             // Local
             return new Local($app['config']['filesystems.publisher_disks.local.root']);
+        }
+    }
+
+    /**
+     * Returns the configured Publisher's filesystem factory
+     *
+     * @param Application $app
+     * @return AwsS3SiteFilesystemFactory|LocalSiteFilesystemFactory
+     */
+    private function getPublisherFilesystemFactory(Application $app)
+    {
+        if ($app['config']['filesystems.publisher_default'] == 's3') {
+            // S3
+            return new AwsS3SiteFilesystemFactory(
+                array_combine(
+                    $app['config']['app.managed_sites'],
+                    $app['config']['filesystems.publisher_disks.s3.managed_sites_buckets']
+                ),
+                new S3Client([
+                    'credentials' => [
+                        'key' => $app['config']['filesystems.publisher_disks.s3.key'],
+                        'secret' => $app['config']['filesystems.publisher_disks.s3.secret'],
+                        'token' => $app['config']['filesystems.publisher_disks.s3.token']
+                    ],
+                    'region' => $app['config']['filesystems.publisher_disks.s3.region'],
+                    'version' => 'latest'
+                ])
+            );
+        } else {
+            // Local
+            $localRootDirs = $app['config']['filesystems.publisher_disks.local.managed_sites_local_root_dirs'];
+            array_walk($localRootDirs, function (&$value) use ($app) {
+                $value = $app['config']['filesystems.publisher_disks.local.root'] . DIRECTORY_SEPARATOR . $value;
+            });
+            return new LocalSiteFilesystemFactory(
+                array_combine(
+                    $app['config']['app.managed_sites'],
+                    $localRootDirs
+                )
+            );
         }
     }
 }

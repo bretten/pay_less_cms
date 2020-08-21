@@ -29,9 +29,9 @@ class FilesystemPostPublisher implements PostPublisherInterface
     private FilesystemInterface $sourceFilesystem;
 
     /**
-     * @var FilesystemInterface
+     * @var SiteFilesystemFactoryInterface
      */
-    private FilesystemInterface $destinationFilesystem;
+    private SiteFilesystemFactoryInterface $destinationFilesystemFactory;
 
     /**
      * Constructor
@@ -39,14 +39,14 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * @param MarkdownConverterInterface $markdownConverter
      * @param ViewFactoryContract $viewFactory
      * @param FilesystemInterface $sourceFilesystem
-     * @param FilesystemInterface $destinationFilesystem
+     * @param SiteFilesystemFactoryInterface $destinationFilesystemFactory
      */
-    public function __construct(MarkdownConverterInterface $markdownConverter, ViewFactoryContract $viewFactory, FilesystemInterface $sourceFilesystem, FilesystemInterface $destinationFilesystem)
+    public function __construct(MarkdownConverterInterface $markdownConverter, ViewFactoryContract $viewFactory, FilesystemInterface $sourceFilesystem, SiteFilesystemFactoryInterface $destinationFilesystemFactory)
     {
         $this->markdownConverter = $markdownConverter;
         $this->viewFactory = $viewFactory;
         $this->sourceFilesystem = $sourceFilesystem;
-        $this->destinationFilesystem = $destinationFilesystem;
+        $this->destinationFilesystemFactory = $destinationFilesystemFactory;
     }
 
     /**
@@ -63,34 +63,36 @@ class FilesystemPostPublisher implements PostPublisherInterface
 
         $activePosts = [];
 
+        $destinationFilesystem = $this->destinationFilesystemFactory->getSiteFilesystem($site);
+
         // Publish posts
         foreach ($posts as $post) {
 
             if ($post->deletedAt) {
                 try {
-                    $this->destinationFilesystem->delete($post->humanReadableUrl);
+                    $destinationFilesystem->delete($post->humanReadableUrl);
                 } catch (FileNotFoundException $e) {
                 }
                 continue;
             }
 
             $post->content = $this->markdownConverter->convertToHtml($post->content);
-            $success = $success && $this->destinationFilesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site));
+            $success = $success && $destinationFilesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site));
 
             array_push($activePosts, $post);
         }
 
         // Publish index file
-        $success = $success && $this->destinationFilesystem->put('index.html', $this->renderPostIndexView($activePosts, $site));
+        $success = $success && $destinationFilesystem->put('index.html', $this->renderPostIndexView($activePosts, $site));
 
         // Copy assets
-        $this->destinationFilesystem->deleteDir('assets');
+        $destinationFilesystem->deleteDir('assets');
         $files = $this->sourceFilesystem->listContents('assets_to_publish' . DIRECTORY_SEPARATOR . $site);
         foreach ($files as $file) {
             if ($file['type'] == 'dir') {
                 continue;
             }
-            $success = $success && $this->destinationFilesystem->put('assets' . DIRECTORY_SEPARATOR . $file['basename'], $this->sourceFilesystem->read($file['path']));
+            $success = $success && $destinationFilesystem->put('assets' . DIRECTORY_SEPARATOR . $file['basename'], $this->sourceFilesystem->read($file['path']));
         }
 
         return $success;

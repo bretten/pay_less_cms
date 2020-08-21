@@ -6,6 +6,7 @@ namespace Tests\Unit\Services;
 
 use App\Contracts\Models\Post;
 use App\Services\FilesystemPostPublisher;
+use App\Services\SiteFilesystemFactoryInterface;
 use DateTime;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use League\CommonMark\MarkdownConverterInterface;
@@ -124,7 +125,13 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn(true);
         });
-        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $sourceFilesystem, $destinationFilesystem);
+        $destinationFilesystemFactory = Mockery::mock(SiteFilesystemFactoryInterface::class, function ($mock) use ($destinationFilesystem) {
+            $mock->shouldReceive('getSiteFilesystem')
+                ->with(null)
+                ->times(1)
+                ->andReturn($destinationFilesystem);
+        });
+        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $sourceFilesystem, $destinationFilesystemFactory);
 
         // Execute
         $result = $publisher->publish($posts);
@@ -243,7 +250,13 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn(true);
         });
-        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $sourceFilesystem, $destinationFilesystem);
+        $destinationFilesystemFactory = Mockery::mock(SiteFilesystemFactoryInterface::class, function ($mock) use ($destinationFilesystem) {
+            $mock->shouldReceive('getSiteFilesystem')
+                ->with('site1')
+                ->times(1)
+                ->andReturn($destinationFilesystem);
+        });
+        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $sourceFilesystem, $destinationFilesystemFactory);
 
         // Execute
         $result = $publisher->publish($posts, $site);
@@ -351,7 +364,13 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn(true);
         });
-        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $sourceFilesystem, $destinationFilesystem);
+        $destinationFilesystemFactory = Mockery::mock(SiteFilesystemFactoryInterface::class, function ($mock) use ($destinationFilesystem) {
+            $mock->shouldReceive('getSiteFilesystem')
+                ->with(null)
+                ->times(1)
+                ->andReturn($destinationFilesystem);
+        });
+        $publisher = new FilesystemPostPublisher($markdownConverter, $viewFactory, $sourceFilesystem, $destinationFilesystemFactory);
 
         // Execute
         $result = $publisher->publish($posts);

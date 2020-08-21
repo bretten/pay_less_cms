@@ -105,32 +105,6 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Returns the filesystem adapter for the Post publisher
-     *
-     * @param Application $app
-     * @return AbstractAdapter
-     */
-    private function getPublisherFilesystemAdapter(Application $app)
-    {
-        if ($app['config']['filesystems.publisher_default'] == 's3') {
-            // S3
-            $client = new S3Client([
-                'credentials' => [
-                    'key' => $app['config']['filesystems.publisher_disks.s3.key'],
-                    'secret' => $app['config']['filesystems.publisher_disks.s3.secret'],
-                    'token' => $app['config']['filesystems.publisher_disks.s3.token']
-                ],
-                'region' => $app['config']['filesystems.publisher_disks.s3.region'],
-                'version' => 'latest'
-            ]);
-            return new AwsS3Adapter($client, $app['config']['filesystems.publisher_disks.s3.bucket']);
-        } else {
-            // Local
-            return new Local($app['config']['filesystems.publisher_disks.local.root']);
-        }
-    }
-
-    /**
      * Returns the configured Publisher's filesystem factory
      *
      * @param Application $app

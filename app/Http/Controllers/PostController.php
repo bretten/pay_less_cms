@@ -29,12 +29,20 @@ class PostController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $posts = $this->repository->getAll();
         usort($posts, function (Post $a, Post $b) {
             return $b->createdAt->getTimestamp() - $a->createdAt->getTimestamp();
         });
+
+        if ($request->query("site") != null)
+        {
+            $site = $request->query("site");
+            $posts = array_filter($posts, function ($post) use ($site) {
+                return $post->site == $site;
+            });
+        }
 
         return response()->view('posts.index', ['posts' => $posts]);
     }

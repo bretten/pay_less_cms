@@ -78,12 +78,13 @@ class FilesystemPostPublisher implements PostPublisherInterface
 
         // Copy assets
         $destinationFilesystem->deleteDir('assets');
-        $files = $this->sourceFilesystem->listContents('assets_to_publish' . DIRECTORY_SEPARATOR . $site);
+        $assetsToPublishPath = $site ? 'assets_to_publish' . DIRECTORY_SEPARATOR . $site : 'assets_to_publish';
+        $files = $this->sourceFilesystem->listContents($assetsToPublishPath, true);
         foreach ($files as $file) {
             if ($file['type'] == 'dir') {
                 continue;
             }
-            $success = $success && $destinationFilesystem->put('assets' . DIRECTORY_SEPARATOR . $file['basename'], $this->sourceFilesystem->read($file['path']));
+            $success = $success && $destinationFilesystem->put('assets' . str_replace($assetsToPublishPath, "", $file['dirname']) . DIRECTORY_SEPARATOR . $file['basename'], $this->sourceFilesystem->read($file['path']));
         }
 
         return $success;

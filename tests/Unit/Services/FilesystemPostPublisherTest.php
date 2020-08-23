@@ -34,11 +34,13 @@ class FilesystemPostPublisherTest extends TestCase
             [
                 'type' => 'file',
                 'path' => 'assets_to_publish/asset1.js',
+                'dirname' => 'assets_to_publish',
                 'basename' => 'asset1.js',
             ],
             [
                 'type' => 'file',
                 'path' => 'assets_to_publish/asset2.js',
+                'dirname' => 'assets_to_publish',
                 'basename' => 'asset2.css',
             ]
         ];
@@ -62,7 +64,7 @@ class FilesystemPostPublisherTest extends TestCase
         });
         $sourceFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
             $mock->shouldReceive('listContents')
-                ->with('assets_to_publish/')
+                ->with('assets_to_publish', true)
                 ->times(1)
                 ->andReturn($assetFiles);
             $mock->shouldReceive('read')
@@ -148,11 +150,13 @@ class FilesystemPostPublisherTest extends TestCase
             [
                 'type' => 'file',
                 'path' => "assets_to_publish/$site/asset1.js",
+                'dirname' => "assets_to_publish/$site",
                 'basename' => 'asset1.js',
             ],
             [
                 'type' => 'file',
                 'path' => "assets_to_publish/$site/asset2.js",
+                'dirname' => "assets_to_publish/$site",
                 'basename' => 'asset2.css',
             ]
         ];
@@ -176,7 +180,7 @@ class FilesystemPostPublisherTest extends TestCase
         });
         $sourceFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($site, $assetFiles) {
             $mock->shouldReceive('listContents')
-                ->with("assets_to_publish/$site")
+                ->with("assets_to_publish/$site", true)
                 ->times(1)
                 ->andReturn($assetFiles);
             $mock->shouldReceive('read')
@@ -258,11 +262,13 @@ class FilesystemPostPublisherTest extends TestCase
             [
                 'type' => 'file',
                 'path' => 'assets_to_publish/asset1.js',
+                'dirname' => 'assets_to_publish',
                 'basename' => 'asset1.js',
             ],
             [
                 'type' => 'file',
                 'path' => 'assets_to_publish/asset2.js',
+                'dirname' => 'assets_to_publish',
                 'basename' => 'asset2.css',
             ]
         ];
@@ -283,7 +289,7 @@ class FilesystemPostPublisherTest extends TestCase
         });
         $sourceFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
             $mock->shouldReceive('listContents')
-                ->with('assets_to_publish/')
+                ->with('assets_to_publish', true)
                 ->times(1)
                 ->andReturn($assetFiles);
             $mock->shouldReceive('read')

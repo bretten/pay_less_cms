@@ -61,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PostPublisherInterface::class, function ($app) {
             $sourceFilesystem = new Filesystem($this->getApplicationFilesystemAdapter($app));
             $destinationFilesystemFactory = $this->getPublisherFilesystemFactory($app);
-            return new FilesystemPostPublisher($this->app->make(MarkdownConverterInterface::class), $this->app->make(ViewFactoryContract::class), $sourceFilesystem, $destinationFilesystemFactory);
+            return new FilesystemPostPublisher($this->app->make(ViewFactoryContract::class), $sourceFilesystem, $destinationFilesystemFactory);
         });
 
         // Markdown

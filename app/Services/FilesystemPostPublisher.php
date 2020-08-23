@@ -7,17 +7,11 @@ namespace App\Services;
 use App\Contracts\Models\Post;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use InvalidArgumentException;
-use League\CommonMark\MarkdownConverterInterface;
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\FilesystemInterface;
 
 class FilesystemPostPublisher implements PostPublisherInterface
 {
-    /**
-     * @var MarkdownConverterInterface
-     */
-    private MarkdownConverterInterface $markdownConverter;
-
     /**
      * @var ViewFactoryContract
      */
@@ -36,14 +30,12 @@ class FilesystemPostPublisher implements PostPublisherInterface
     /**
      * Constructor
      *
-     * @param MarkdownConverterInterface $markdownConverter
      * @param ViewFactoryContract $viewFactory
      * @param FilesystemInterface $sourceFilesystem
      * @param SiteFilesystemFactoryInterface $destinationFilesystemFactory
      */
-    public function __construct(MarkdownConverterInterface $markdownConverter, ViewFactoryContract $viewFactory, FilesystemInterface $sourceFilesystem, SiteFilesystemFactoryInterface $destinationFilesystemFactory)
+    public function __construct(ViewFactoryContract $viewFactory, FilesystemInterface $sourceFilesystem, SiteFilesystemFactoryInterface $destinationFilesystemFactory)
     {
-        $this->markdownConverter = $markdownConverter;
         $this->viewFactory = $viewFactory;
         $this->sourceFilesystem = $sourceFilesystem;
         $this->destinationFilesystemFactory = $destinationFilesystemFactory;
@@ -76,7 +68,6 @@ class FilesystemPostPublisher implements PostPublisherInterface
                 continue;
             }
 
-            $post->content = $this->markdownConverter->convertToHtml($post->content);
             $success = $success && $destinationFilesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site));
 
             array_push($activePosts, $post);

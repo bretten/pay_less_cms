@@ -103,6 +103,8 @@ class FilesystemPostPublisher implements PostPublisherInterface
             return $this->viewFactory->make('posts.published.show', ['post' => $post]);
         }
 
+        $site = str_replace(".", "_", $site);
+
         try {
             return $this->viewFactory->make("posts.published.sites.$site.show", ['post' => $post]);
         } catch (InvalidArgumentException $e) {
@@ -123,6 +125,8 @@ class FilesystemPostPublisher implements PostPublisherInterface
         if ($site == null) {
             return $this->viewFactory->make('posts.published.list', ['posts' => $posts]);
         }
+
+        $site = str_replace(".", "_", $site);
 
         try {
             return $this->viewFactory->make("posts.published.sites.$site.list", ['posts' => $posts]);

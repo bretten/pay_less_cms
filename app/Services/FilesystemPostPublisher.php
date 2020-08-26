@@ -28,17 +28,26 @@ class FilesystemPostPublisher implements PostPublisherInterface
     private SiteFilesystemFactoryInterface $destinationFilesystemFactory;
 
     /**
+     * @var string
+     */
+    private string $siteViewPathStorage;
+
+    /**
      * Constructor
      *
      * @param ViewFactoryContract $viewFactory
      * @param FilesystemInterface $sourceFilesystem
      * @param SiteFilesystemFactoryInterface $destinationFilesystemFactory
+     * @param string $siteViewPathStorage
      */
-    public function __construct(ViewFactoryContract $viewFactory, FilesystemInterface $sourceFilesystem, SiteFilesystemFactoryInterface $destinationFilesystemFactory)
+    public function __construct(ViewFactoryContract $viewFactory, FilesystemInterface $sourceFilesystem,
+                                SiteFilesystemFactoryInterface $destinationFilesystemFactory,
+                                string $siteViewPathStorage)
     {
         $this->viewFactory = $viewFactory;
         $this->sourceFilesystem = $sourceFilesystem;
         $this->destinationFilesystemFactory = $destinationFilesystemFactory;
+        $this->siteViewPathStorage = $siteViewPathStorage;
     }
 
     /**
@@ -51,6 +60,7 @@ class FilesystemPostPublisher implements PostPublisherInterface
      */
     public function publish($posts, string $site = null)
     {
+        $this->viewFactory->addNamespace($site, $this->siteViewPathStorage . DIRECTORY_SEPARATOR . $site);
         $success = true;
 
         $activePosts = [];
@@ -78,7 +88,7 @@ class FilesystemPostPublisher implements PostPublisherInterface
 
         // Copy assets
         $destinationFilesystem->deleteDir('assets');
-        $assetsToPublishPath = $site ? 'assets_to_publish' . DIRECTORY_SEPARATOR . $site : 'assets_to_publish';
+        $assetsToPublishPath = ($site ? 'sites' . DIRECTORY_SEPARATOR . $site : 'sites') . DIRECTORY_SEPARATOR . 'assets';
         $files = $this->sourceFilesystem->listContents($assetsToPublishPath, true);
         foreach ($files as $file) {
             if ($file['type'] == 'dir') {
@@ -104,10 +114,8 @@ class FilesystemPostPublisher implements PostPublisherInterface
             return $this->viewFactory->make('posts.published.show', ['post' => $post]);
         }
 
-        $site = str_replace(".", "_", $site);
-
         try {
-            return $this->viewFactory->make("posts.published.sites.$site.show", ['post' => $post]);
+            return $this->viewFactory->make("$site::show", ['post' => $post]);
         } catch (InvalidArgumentException $e) {
             return $this->viewFactory->make('posts.published.show', ['post' => $post]);
         }
@@ -127,10 +135,8 @@ class FilesystemPostPublisher implements PostPublisherInterface
             return $this->viewFactory->make('posts.published.list', ['posts' => $posts]);
         }
 
-        $site = str_replace(".", "_", $site);
-
         try {
-            return $this->viewFactory->make("posts.published.sites.$site.list", ['posts' => $posts]);
+            return $this->viewFactory->make("$site::list", ['posts' => $posts]);
         } catch (InvalidArgumentException $e) {
             return $this->viewFactory->make('posts.published.list', ['posts' => $posts]);
         }

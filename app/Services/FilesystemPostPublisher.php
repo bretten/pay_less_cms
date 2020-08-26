@@ -30,7 +30,7 @@ class FilesystemPostPublisher implements PostPublisherInterface
     /**
      * @var string
      */
-    private string $siteViewPathStorage;
+    private string $resourcePath;
 
     /**
      * Constructor
@@ -38,16 +38,16 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * @param ViewFactoryContract $viewFactory
      * @param FilesystemInterface $sourceFilesystem
      * @param SiteFilesystemFactoryInterface $destinationFilesystemFactory
-     * @param string $siteViewPathStorage
+     * @param string $resourcePath
      */
     public function __construct(ViewFactoryContract $viewFactory, FilesystemInterface $sourceFilesystem,
                                 SiteFilesystemFactoryInterface $destinationFilesystemFactory,
-                                string $siteViewPathStorage)
+                                string $resourcePath)
     {
         $this->viewFactory = $viewFactory;
         $this->sourceFilesystem = $sourceFilesystem;
         $this->destinationFilesystemFactory = $destinationFilesystemFactory;
-        $this->siteViewPathStorage = $siteViewPathStorage;
+        $this->resourcePath = $resourcePath;
     }
 
     /**
@@ -60,7 +60,7 @@ class FilesystemPostPublisher implements PostPublisherInterface
      */
     public function publish($posts, string $site = null)
     {
-        $this->viewFactory->addNamespace($site, $this->siteViewPathStorage . DIRECTORY_SEPARATOR . $site);
+        $this->viewFactory->addNamespace($site, $this->resourcePath . DIRECTORY_SEPARATOR . $site);
         $success = true;
 
         $activePosts = [];
@@ -88,7 +88,7 @@ class FilesystemPostPublisher implements PostPublisherInterface
 
         // Copy assets
         $destinationFilesystem->deleteDir('assets');
-        $assetsToPublishPath = ($site ? 'sites' . DIRECTORY_SEPARATOR . $site : 'sites') . DIRECTORY_SEPARATOR . 'assets';
+        $assetsToPublishPath = ($site ? $site . DIRECTORY_SEPARATOR : '') . 'assets';
         $files = $this->sourceFilesystem->listContents($assetsToPublishPath, true);
         foreach ($files as $file) {
             if ($file['type'] == 'dir') {

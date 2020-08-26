@@ -33,22 +33,22 @@ class FilesystemPostPublisherTest extends TestCase
         $assetFiles = [
             [
                 'type' => 'file',
-                'path' => 'sites/assets/asset1.js',
-                'dirname' => 'sites/assets',
+                'path' => 'assets/asset1.js',
+                'dirname' => 'assets',
                 'basename' => 'asset1.js',
             ],
             [
                 'type' => 'file',
-                'path' => 'sites/assets/asset2.js',
-                'dirname' => 'sites/assets',
+                'path' => 'assets/asset2.js',
+                'dirname' => 'assets',
                 'basename' => 'asset2.css',
             ]
         ];
-        $siteViewPathStorage = "/home/storage/app";
+        $resourcePath = '/home/resources/sites';
 
-        $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($siteViewPathStorage, $post1, $post2, $post3) {
+        $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($resourcePath, $post1, $post2, $post3) {
             $mock->shouldReceive('addNamespace')
-                ->with(null, $siteViewPathStorage . DIRECTORY_SEPARATOR)
+                ->with(null, $resourcePath . DIRECTORY_SEPARATOR)
                 ->times(1);
             $mock->shouldReceive('make')
                 ->with('posts.published.show', ['post' => $post1])
@@ -68,7 +68,7 @@ class FilesystemPostPublisherTest extends TestCase
         });
         $sourceFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
             $mock->shouldReceive('listContents')
-                ->with('sites/assets', true)
+                ->with('assets', true)
                 ->times(1)
                 ->andReturn($assetFiles);
             $mock->shouldReceive('read')
@@ -123,7 +123,7 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn($destinationFilesystem);
         });
-        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $siteViewPathStorage);
+        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $resourcePath);
 
         // Execute
         $result = $publisher->publish($posts);
@@ -152,22 +152,22 @@ class FilesystemPostPublisherTest extends TestCase
         $assetFiles = [
             [
                 'type' => 'file',
-                'path' => "sites/$site/assets/asset1.js",
-                'dirname' => "sites/$site/assets",
+                'path' => "$site/assets/asset1.js",
+                'dirname' => "$site/assets",
                 'basename' => 'asset1.js',
             ],
             [
                 'type' => 'file',
-                'path' => "sites/$site/assets/asset2.js",
-                'dirname' => "sites/$site/assets",
+                'path' => "$site/assets/asset2.js",
+                'dirname' => "$site/assets",
                 'basename' => 'asset2.css',
             ]
         ];
-        $siteViewPathStorage = "/home/storage/app";
+        $resourcePath = '/home/resources/sites';
 
-        $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($site, $siteViewPathStorage, $post1, $post2, $post3) {
+        $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($site, $resourcePath, $post1, $post2, $post3) {
             $mock->shouldReceive('addNamespace')
-                ->with($site, $siteViewPathStorage . DIRECTORY_SEPARATOR . $site)
+                ->with($site, $resourcePath . DIRECTORY_SEPARATOR . $site)
                 ->times(1);
             $mock->shouldReceive('make')
                 ->with("$site::show", ['post' => $post1])
@@ -187,7 +187,7 @@ class FilesystemPostPublisherTest extends TestCase
         });
         $sourceFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($site, $assetFiles) {
             $mock->shouldReceive('listContents')
-                ->with("sites/$site/assets", true)
+                ->with("$site/assets", true)
                 ->times(1)
                 ->andReturn($assetFiles);
             $mock->shouldReceive('read')
@@ -242,7 +242,7 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn($destinationFilesystem);
         });
-        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $siteViewPathStorage);
+        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $resourcePath);
 
         // Execute
         $result = $publisher->publish($posts, $site);
@@ -271,22 +271,22 @@ class FilesystemPostPublisherTest extends TestCase
         $assetFiles = [
             [
                 'type' => 'file',
-                'path' => "sites/$site/assets/asset1.js",
-                'dirname' => "sites/$site/assets",
+                'path' => "$site/assets/asset1.js",
+                'dirname' => "$site/assets",
                 'basename' => 'asset1.js',
             ],
             [
                 'type' => 'file',
-                'path' => "sites/$site/assets/asset2.js",
-                'dirname' => "sites/$site/assets",
+                'path' => "$site/assets/asset2.js",
+                'dirname' => "$site/assets",
                 'basename' => 'asset2.css',
             ]
         ];
-        $siteViewPathStorage = "/home/storage/app";
+        $resourcePath = '/home/resources/sites';
 
-        $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($site, $siteViewPathStorage, $post1, $post2, $post3) {
+        $viewFactory = Mockery::mock(ViewFactoryContract::class, function ($mock) use ($site, $resourcePath, $post1, $post2, $post3) {
             $mock->shouldReceive('addNamespace')
-                ->with($site, $siteViewPathStorage . DIRECTORY_SEPARATOR . $site)
+                ->with($site, $resourcePath . DIRECTORY_SEPARATOR . $site)
                 ->times(1);
             $mock->shouldReceive('make')
                 ->with("$site::show", ['post' => $post1])
@@ -306,7 +306,7 @@ class FilesystemPostPublisherTest extends TestCase
         });
         $sourceFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($site, $assetFiles) {
             $mock->shouldReceive('listContents')
-                ->with("sites/$site/assets", true)
+                ->with("$site/assets", true)
                 ->times(1)
                 ->andReturn($assetFiles);
             $mock->shouldReceive('read')
@@ -361,7 +361,7 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn($destinationFilesystem);
         });
-        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $siteViewPathStorage);
+        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $resourcePath);
 
         // Execute
         $result = $publisher->publish($posts, $site);

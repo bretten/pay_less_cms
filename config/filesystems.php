@@ -104,7 +104,8 @@ return [
 
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app') . '/published',
+            'resources_root' => realpath(resource_path('sites')),
+            'published_files_root' => storage_path('app/published'),
             'managed_sites_local_root_dirs' => str_getcsv(env('PUBLISHER_MANAGED_SITES_LOCAL_ROOT_DIRS'))
         ],
 

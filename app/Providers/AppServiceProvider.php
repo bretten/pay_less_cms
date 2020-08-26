@@ -59,13 +59,13 @@ class AppServiceProvider extends ServiceProvider
 
         // Publishers
         $this->app->bind(PostPublisherInterface::class, function ($app) {
-            $sourceFilesystem = new Filesystem($this->getApplicationFilesystemAdapter($app));
+            $sourceFilesystem = new Filesystem($this->getPublisherResourceFilesystem($app));
             $destinationFilesystemFactory = $this->getPublisherFilesystemFactory($app);
             return new FilesystemPostPublisher(
                 $this->app->make(ViewFactoryContract::class),
                 $sourceFilesystem,
                 $destinationFilesystemFactory,
-                realpath(storage_path("app/sites"))
+                realpath(resource_path('sites'))
             );
         });
 
@@ -110,6 +110,17 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
+     * Returns the filesystem adapter for the Publisher's resources
+     *
+     * @param Application $app
+     * @return AbstractAdapter
+     */
+    private function getPublisherResourceFilesystem(Application $app)
+    {
+        return new Local($app['config']['filesystems.publisher_disks.local.resources_root']);
+    }
+
+    /**
      * Returns the configured Publisher's filesystem factory
      *
      * @param Application $app
@@ -138,7 +149,7 @@ class AppServiceProvider extends ServiceProvider
             // Local
             $localRootDirs = $app['config']['filesystems.publisher_disks.local.managed_sites_local_root_dirs'];
             array_walk($localRootDirs, function (&$value) use ($app) {
-                $value = $app['config']['filesystems.publisher_disks.local.root'] . DIRECTORY_SEPARATOR . $value;
+                $value = $app['config']['filesystems.publisher_disks.local.published_files_root'] . DIRECTORY_SEPARATOR . $value;
             });
             return new LocalSiteFilesystemFactory(
                 array_combine(

@@ -8,7 +8,6 @@
 
 @section('content')
 
-    @include('posts.shared.editor')
 
     <div class="container-fluid">
         <form method="POST" action="/{{ Route::prefix(config('app.url_prefix'))->get("posts")->uri() }}">
@@ -24,10 +23,12 @@
                 <input type="text" class="form-control" id="post-title" name="title">
             </div>
 
+            <div id="jsoneditor" style="width: 400px; height: 400px; display: none;"></div>
             <div class="form-group">
                 <label for="post-content">Content</label>
                 <textarea class="form-control" id="post-content" name="content" rows="10"></textarea>
             </div>
+            @include('posts.shared.editor')
 
             <div class="form-group">
                 <label for="post-human-readable-url">Human Readable URL</label>

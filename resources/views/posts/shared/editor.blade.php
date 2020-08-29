@@ -1,5 +1,16 @@
 <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.0.4/jsoneditor.min.js"
+        integrity="sha512-8ui6NfUrJH7tponbZd5Lai3dqToJ9x7rQQRqaNtdNuVdsuOkoTMEitV2jfRsJ3stEYjSsn8n+9nnvTv0i1hb7g=="
+        crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.0.4/jsoneditor.min.css"
+      integrity="sha512-PWaHjZQo6KuaDHCDvl1WEePqV8hGiJc4vzec7iH7dIX67ql/s3S47xRBptJfHfcffENdIp/pMHKY7rfkiE3Osw=="
+      crossorigin="anonymous"/>
+
 <script>
+    var postContentElement = document.getElementById('post-content');
+    var jsonEditorContainer = document.getElementById("jsoneditor");
+    var jsonEditor = null;
+
     function initTinyMce() {
         tinymce.init({
             selector: '#post-content',
@@ -58,20 +69,37 @@
         tinymce.remove();
     }
 
-    function formatJson() {
-        var postContentElement = document.getElementById('post-content');
-        postContentElement.value = JSON.stringify(JSON.parse(postContentElement.value), undefined, 4);
+    function initJsonEditor() {
+        var options = {
+            "mode": "code",
+            "indentation": 4,
+            "onChangeText": function (jsonString) {
+                postContentElement.value = jsonString;
+            }
+        };
+        jsonEditor = new JSONEditor(jsonEditorContainer, options);
+        jsonEditor.setText(postContentElement.value);
+        jsonEditorContainer.style.display = 'block';
+    }
+
+    function removeJsonEditor() {
+        if (jsonEditor != null) {
+            jsonEditor.destroy();
+        }
+        jsonEditorContainer.style.display = 'none';
     }
 
     function changeRadio(radio) {
         var value = radio.value;
         if (value === 'plaintext') {
             removeTinyMce();
+            removeJsonEditor();
         } else if (value === 'html') {
             initTinyMce();
+            removeJsonEditor();
         } else if (value === 'json') {
             removeTinyMce();
-            formatJson();
+            initJsonEditor();
         }
     }
 </script>

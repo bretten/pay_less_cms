@@ -79,7 +79,11 @@
             }
         };
         jsonEditor = new JSONEditor(jsonEditorContainer, options);
-        jsonEditor.setText(JSON.stringify(JSON.parse(postContentElement.value), null, 4));
+        try {
+            jsonEditor.setText(JSON.stringify(JSON.parse(postContentElement.value), null, 4));
+        } catch (e) {
+            jsonEditor.setText(postContentElement.value);
+        }
         jsonEditorContainer.style.display = 'block';
     }
 

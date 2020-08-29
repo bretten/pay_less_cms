@@ -13,6 +13,7 @@
 
     function initTinyMce() {
         tinymce.init({
+            forced_root_block: false,
             selector: '#post-content',
             toolbar: 'image',
             plugins: 'image imagetools',

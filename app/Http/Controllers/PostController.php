@@ -76,8 +76,16 @@ class PostController extends Controller
         if ($request->hasFile('file')) {
             $site = $request->input('site');
             $filesystem = $this->siteFileSystemFactory->getSiteFilesystem($site);
-            $path = 'assets' . DIRECTORY_SEPARATOR . $request->file('file')->getClientOriginalName();
-            $filesystem->put($path, $request->file('file')->get());
+            $file = $request->file('file');
+            $path = 'assets' . DIRECTORY_SEPARATOR . $file->getClientOriginalName();
+            if ($file->getClientMimeType() == "image/jpeg" && $file->get() != '') {
+                imagejpeg(imagecreatefromjpeg($file->path()), $file->path(), 80);
+            } else if ($file->getClientMimeType() == "image/gif" && $file->get() != '') {
+                imagegif(imagecreatefromgif($file->path()), $file->path(), 80);
+            } else if ($file->getClientMimeType() == "image/png" && $file->get() != '') {
+                imagepng(imagecreatefrompng($file->path()), $file->path(), 80);
+            }
+            $filesystem->put($path, $file->get());
             if ($filesystem->getAdapter() instanceof AwsS3Adapter) {
                 $uploadedPath = $filesystem->getAdapter()->getClient()->getObjectUrl($site, $path);
             } else {

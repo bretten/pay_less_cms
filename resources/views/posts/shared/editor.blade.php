@@ -58,6 +58,11 @@
         tinymce.remove();
     }
 
+    function formatJson() {
+        var postContentElement = document.getElementById('post-content');
+        postContentElement.value = JSON.stringify(JSON.parse(postContentElement.value), undefined, 4);
+    }
+
     function changeRadio(radio) {
         var value = radio.value;
         if (value === 'plaintext') {
@@ -66,6 +71,7 @@
             initTinyMce();
         } else if (value === 'json') {
             removeTinyMce();
+            formatJson();
         }
     }
 </script>

@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Contracts\Models\Post;
 use App\Repositories\PostRepositoryInterface;
+use App\Services\SiteFilesystemFactoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use League\Flysystem\AwsS3v3\AwsS3Adapter;
 
 class PostController extends Controller
 {
@@ -15,13 +17,20 @@ class PostController extends Controller
     private $repository;
 
     /**
+     * @var SiteFilesystemFactoryInterface
+     */
+    private SiteFilesystemFactoryInterface $siteFileSystemFactory;
+
+    /**
      * Constructor
      *
      * @param PostRepositoryInterface $repository
+     * @param SiteFilesystemFactoryInterface $siteFilesystemFactory
      */
-    public function __construct(PostRepositoryInterface $repository)
+    public function __construct(PostRepositoryInterface $repository, SiteFilesystemFactoryInterface $siteFilesystemFactory)
     {
         $this->repository = $repository;
+        $this->siteFileSystemFactory = $siteFilesystemFactory;
     }
 
     /**
@@ -36,8 +45,7 @@ class PostController extends Controller
             return $b->createdAt->getTimestamp() - $a->createdAt->getTimestamp();
         });
 
-        if ($request->query("site") != null)
-        {
+        if ($request->query("site") != null) {
             $site = $request->query("site");
             $posts = array_filter($posts, function ($post) use ($site) {
                 return $post->site == $site;
@@ -65,6 +73,20 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->hasFile('file')) {
+            $site = $request->input('site');
+            $filesystem = $this->siteFileSystemFactory->getSiteFilesystem($site);
+            $path = 'assets' . DIRECTORY_SEPARATOR . $request->file('file')->getClientOriginalName();
+            $filesystem->put($path, $request->file('file')->get());
+            if ($filesystem->getAdapter() instanceof AwsS3Adapter) {
+                $uploadedPath = $filesystem->getAdapter()->getClient()->getObjectUrl($site, $path);
+            } else {
+                $uploadedPath = DIRECTORY_SEPARATOR . $path;
+            }
+
+            return response("{\"location\": \"$uploadedPath\"}", 200);
+        }
+
         $result = $this->repository->create(
             $request->input('site'),
             $request->input('title'),

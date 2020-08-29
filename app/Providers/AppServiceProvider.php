@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Controllers\PostController;
 use App\Repositories\AwsDynamoDbPostRepository;
 use App\Repositories\EloquentPostRepository;
 use App\Repositories\PostRepositoryInterface;
@@ -9,6 +10,7 @@ use App\Services\AwsS3SiteFilesystemFactory;
 use App\Services\FilesystemPostPublisher;
 use App\Services\LocalSiteFilesystemFactory;
 use App\Services\PostPublisherInterface;
+use App\Services\SiteFilesystemFactoryInterface;
 use App\Support\DateTimeFactory;
 use App\Support\UniqueIdFactory;
 use Aws\DynamoDb\DynamoDbClient;
@@ -71,6 +73,13 @@ class AppServiceProvider extends ServiceProvider
 
         // Markdown
         $this->app->bind(MarkdownConverterInterface::class, CommonMarkConverter::class);
+
+        // Contextual bindings
+        $this->app->when(PostController::class)
+            ->needs(SiteFilesystemFactoryInterface::class)
+            ->give(function ($app) {
+                return $this->getPublisherFilesystemFactory($app);
+            });
     }
 
     /**

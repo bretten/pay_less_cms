@@ -7,6 +7,9 @@
 @section('page-header', 'Edit a Post')
 
 @section('content')
+
+    @include('posts.shared.editor')
+
     <div class="container-fluid">
         <form method="POST" action="/{{ Route::prefix(config('app.url_prefix'))->get("posts/$post->id")->uri() }}">
             @method('PUT')

@@ -3,12 +3,17 @@
 namespace Tests\Feature\Http\Controllers;
 
 use App\Contracts\Models\Post;
+use App\Http\Controllers\PostController;
 use App\Http\Middleware\AuthenticateByIp;
 use App\Repositories\PostRepositoryInterface;
+use App\Services\SiteFilesystemFactoryInterface;
 use DateTime;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
+use League\Flysystem\Adapter\AbstractAdapter;
+use League\Flysystem\FilesystemInterface;
 use Mockery;
 use Tests\TestCase;
 
@@ -190,6 +195,7 @@ class PostControllerTest extends TestCase
         // Assert
         $response->assertStatus(200);
         $actualContentWithCsrfRemoved = preg_replace('/<input type="hidden" name="_token" value="(.*?)">/', '<input type="hidden" name="_token" value="">', $response->baseResponse->content());
+        $actualContentWithCsrfRemoved = preg_replace('/xhr.setRequestHeader\(\'X-CSRF-Token\', \'(.*?)\'\);/', 'xhr.setRequestHeader(\'X-CSRF-Token\', \'\');', $actualContentWithCsrfRemoved);
         $this->assertEquals($expectedResponse->content(), $actualContentWithCsrfRemoved);
     }
 
@@ -311,5 +317,55 @@ class PostControllerTest extends TestCase
 
         // Assert
         $response->assertStatus(500);
+    }
+
+    /**
+     * Test that the store method can upload an image
+     *
+     * @return void
+     */
+    public function testStoreCanUploadImage()
+    {
+        // Setup
+        $site = 'site1';
+        $file = UploadedFile::fake()->create('file1.jpg', 5000, 'image/jpeg');
+        $uploadDestinationPath = 'assets' . DIRECTORY_SEPARATOR . $file->getClientOriginalName();
+        $expectedUploadFullPath = DIRECTORY_SEPARATOR . $uploadDestinationPath;
+
+        $adapter = Mockery::mock(AbstractAdapter::class, function ($mock) use ($expectedUploadFullPath) {
+            $mock->shouldReceive('getPathPrefix')
+                ->with()
+                ->andReturn($expectedUploadFullPath);
+        });
+        $filesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($uploadDestinationPath, $file, $adapter) {
+            $mock->shouldReceive('put')
+                ->with($uploadDestinationPath, $file->get())
+                ->andReturn(true);
+            $mock->shouldReceive('getAdapter')
+                ->with()
+                ->andReturn($adapter);
+        });
+        $filesystemFactory = Mockery::mock(SiteFilesystemFactoryInterface::class, function ($mock) use ($site, $filesystem) {
+            $mock->shouldReceive('getSiteFilesystem')
+                ->with($site)
+                ->andReturn($filesystem);
+        });
+        $this->app->when(PostController::class)
+            ->needs(SiteFilesystemFactoryInterface::class)
+            ->give(function ($app) use ($filesystemFactory) {
+                return $filesystemFactory;
+            });
+
+        // Execute
+        $response = $this->post('/posts', [
+            'site' => $site,
+            'file' => $file
+        ]);
+
+        // Assert
+        $response->assertJson([
+            'location' => $expectedUploadFullPath
+        ]);
+        $response->assertStatus(200);
     }
 }

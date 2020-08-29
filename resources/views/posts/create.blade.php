@@ -23,7 +23,7 @@
                 <input type="text" class="form-control" id="post-title" name="title">
             </div>
 
-            <div id="jsoneditor" style="width: 400px; height: 400px; display: none;"></div>
+            <div id="jsoneditor" style="width: 100%; height: 400px; display: none;"></div>
             <div class="form-group">
                 <label for="post-content">Content</label>
                 <textarea class="form-control" id="post-content" name="content" rows="10"></textarea>

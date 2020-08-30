@@ -62,11 +62,11 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * Publishes the specified Posts to the Filesystem
      *
      * @param Post[] $posts
-     * @param string|null $site
+     * @param string $site
      * @return bool
      * @throws FileNotFoundException
      */
-    public function publish($posts, string $site = null)
+    public function publish(iterable $posts, string $site)
     {
         $this->viewFactory->addNamespace($site, $this->resourcePath . DIRECTORY_SEPARATOR . $site);
         $success = true;
@@ -74,10 +74,10 @@ class FilesystemPostPublisher implements PostPublisherInterface
         $destinationFilesystem = $this->destinationFilesystemFactory->getSiteFilesystem($site);
 
         // Publish posts
-        $success = $success && $this->publishPosts($destinationFilesystem, $posts, $site);
+        $success = $success && $this->publishPosts($posts, $site, $destinationFilesystem);
 
         // Publish index files
-        $success = $success && $this->publishPostIndexes($destinationFilesystem, $posts, $site);
+        $success = $success && $this->publishPostIndexes($posts, $site, $destinationFilesystem);
 
         // Copy assets
         $destinationFilesystem->deleteDir('assets');
@@ -96,12 +96,12 @@ class FilesystemPostPublisher implements PostPublisherInterface
     /**
      * Renders each Post's content and publishes to the destination filesystem as its own separate file.
      *
-     * @param FilesystemInterface $destinationFilesystem
      * @param Post[] $posts
-     * @param string|null $site
+     * @param string $site
+     * @param FilesystemInterface $destinationFilesystem
      * @return bool
      */
-    private function publishPosts(FilesystemInterface $destinationFilesystem, $posts, string $site = null)
+    private function publishPosts(iterable $posts, string $site, FilesystemInterface $destinationFilesystem)
     {
         $success = true;
 
@@ -125,19 +125,19 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * Renders a list of all the Posts as an index file and publishes it to the destination filesystem. If the page
      * size is greater than 0, the Posts will be divided into separate Post list files.
      *
-     * @param FilesystemInterface $destinationFilesystem
      * @param Post[] $posts
-     * @param string|null $site
+     * @param string $site
+     * @param FilesystemInterface $destinationFilesystem
      * @return bool
      */
-    private function publishPostIndexes(FilesystemInterface $destinationFilesystem, $posts, string $site = null)
+    private function publishPostIndexes(iterable $posts, string $site, FilesystemInterface $destinationFilesystem)
     {
         $success = true;
 
         // Filter out deleted posts
-        $posts = array_filter($posts, function ($post) {
+        $posts = array_values(array_filter($posts, function ($post) {
             return !$post->deletedAt;
-        });
+        }));
 
         // Create index and following pages
         $pages = $this->pageSize > 0 ? array_chunk($posts, $this->pageSize) : [$posts];
@@ -163,15 +163,11 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * is rendered with the default view
      *
      * @param Post $post
-     * @param string|null $site
+     * @param string $site
      * @return \Illuminate\Contracts\View\View
      */
-    private function renderPostContentView(Post $post, string $site = null)
+    private function renderPostContentView(Post $post, string $site)
     {
-        if ($site == null) {
-            return $this->viewFactory->make('posts.published.show', ['post' => $post]);
-        }
-
         try {
             return $this->viewFactory->make("$site::show", ['post' => $post]);
         } catch (InvalidArgumentException $e) {
@@ -185,15 +181,11 @@ class FilesystemPostPublisher implements PostPublisherInterface
      *
      * @param Post[] $posts
      * @param array $pagination
-     * @param string|null $site
+     * @param string $site
      * @return \Illuminate\Contracts\View\View
      */
-    private function renderPostIndexView($posts, array $pagination, string $site = null)
+    private function renderPostIndexView(iterable $posts, array $pagination, string $site)
     {
-        if ($site == null) {
-            return $this->viewFactory->make('posts.published.list', ['posts' => $posts, 'pagination' => $pagination]);
-        }
-
         try {
             return $this->viewFactory->make("$site::list", ['posts' => $posts, 'pagination' => $pagination]);
         } catch (InvalidArgumentException $e) {

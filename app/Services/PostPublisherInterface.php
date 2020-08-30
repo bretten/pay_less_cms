@@ -10,8 +10,8 @@ interface PostPublisherInterface
      * Should publish all specified Posts
      *
      * @param iterable $posts
-     * @param string|null $site
+     * @param string $site
      * @return bool
      */
-    public function publish(iterable $posts, string $site = null);
+    public function publish(iterable $posts, string $site);
 }

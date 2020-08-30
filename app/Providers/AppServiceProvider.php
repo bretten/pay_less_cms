@@ -67,7 +67,8 @@ class AppServiceProvider extends ServiceProvider
                 $this->app->make(ViewFactoryContract::class),
                 $sourceFilesystem,
                 $destinationFilesystemFactory,
-                realpath(resource_path('sites'))
+                realpath(resource_path('sites')),
+                $app['config']['app.publisher_page_size']
             );
         });
 

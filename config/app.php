@@ -251,4 +251,16 @@ return [
 
     'managed_sites' => str_getcsv(env('MANAGED_SITES')),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Publisher page size
+    |--------------------------------------------------------------------------
+    |
+    | The number of Posts that are published per page. Use 0 to have all Posts
+    | published on a single index page.
+    |
+    */
+
+    'publisher_page_size' => env('PUBLISHER_PAGE_SIZE', 6),
+
 ];

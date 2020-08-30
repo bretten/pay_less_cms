@@ -15,7 +15,7 @@
 
             <div class="form-group">
                 <label for="post-site">Site</label>
-                <input type="text" class="form-control" id="post-site" name="site">
+                <input type="text" class="form-control" id="post-site" name="site" value="{{ Session::get('site') }}">
             </div>
 
             <div class="form-group">

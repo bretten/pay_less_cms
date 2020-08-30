@@ -47,6 +47,15 @@ class PostController extends Controller
 
         if ($request->query("site") != null) {
             $site = $request->query("site");
+            if ($site == 'all') {
+                $request->session()->forget('site');
+            } else {
+                $request->session()->put('site', $site);
+            }
+        }
+
+        if ($request->session()->exists('site')) {
+            $site = $request->session()->get('site');
             $posts = array_filter($posts, function ($post) use ($site) {
                 return $post->site == $site;
             });

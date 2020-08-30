@@ -7,6 +7,19 @@
 @section('page-header', 'Posts')
 
 @section('content')
+    <div class="container-fluid text-left">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" id="site-dropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Sites
+            </button>
+            <div class="dropdown-menu" aria-labelledby="site-dropdown">
+                <a class="dropdown-item" href="/{{ Route::prefix(config('app.url_prefix'))->get('posts')->uri() . '?site=all' }}">All</a>
+                @foreach (config('app.managed_sites') as $site)
+                    <a class="dropdown-item" href="/{{ Route::prefix(config('app.url_prefix'))->get('posts')->uri() . "?site=$site" }}">{{ $site }}</a>
+                @endforeach
+            </div>
+        </div>
+    </div>
     <div class="container-fluid text-right">
         <a class="btn btn-primary" href="/{{ Route::prefix(config('app.url_prefix'))->get('posts/create')->uri() }}" role="button">New Post</a>
     </div>

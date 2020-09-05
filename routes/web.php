@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,3 +19,12 @@ Route::get('/', function () {
 });
 
 Route::resource('posts', 'PostController');
+Route::post('/publish/site/{site?}', function ($site = null) {
+    if ($site) {
+        Artisan::call("posts:publish --site=$site");
+    } else {
+        Artisan::call('posts:publish');
+    }
+
+    return redirect('/' . Route::prefix(config('app.url_prefix'))->get("posts")->uri());
+});

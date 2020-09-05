@@ -8,7 +8,8 @@
 
 @section('content')
     <div class="container-fluid text-left">
-        <div class="dropdown">
+        <span class="badge badge-pill badge-success">{{ session("site") ?? "All" }}</span>
+        <div class="dropdown mt-3">
             <button class="btn btn-primary dropdown-toggle" id="site-dropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Sites
             </button>
@@ -18,6 +19,14 @@
                     <a class="dropdown-item" href="/{{ Route::prefix(config('app.url_prefix'))->get('posts')->uri() . "?site=$site" }}">{{ $site }}</a>
                 @endforeach
             </div>
+        </div>
+        <div class="mt-3">
+            <form method="POST" action="/{{ Route::prefix(config('app.url_prefix'))->post('publish/site/' . session('site'))->uri() }}" id="publish-posts">
+                @method('POST')
+                @csrf
+                <button type="submit" class="btn btn-info" onclick="return confirm('Publish site for {{ session("site") ?? "All" }}?')">Publish
+                </button>
+            </form>
         </div>
     </div>
     <div class="container-fluid text-right">

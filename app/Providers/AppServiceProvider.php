@@ -10,6 +10,8 @@ use App\Services\AwsS3SiteFilesystemFactory;
 use App\Services\FilesystemPostPublisher;
 use App\Services\LocalSiteFilesystemFactory;
 use App\Services\PostPublisherInterface;
+use App\Services\PostSitemapGenerator;
+use App\Services\SimpleXmlPostSitemapGenerator;
 use App\Services\SiteFilesystemFactoryInterface;
 use App\Support\DateTimeFactory;
 use App\Support\UniqueIdFactory;
@@ -60,6 +62,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Publishers
+        $this->app->bind(PostSitemapGenerator::class, function ($app) {
+            return new SimpleXmlPostSitemapGenerator('https', new DateTimeFactory());
+        });
         $this->app->bind(PostPublisherInterface::class, function ($app) {
             $sourceFilesystem = new Filesystem($this->getPublisherResourceFilesystem($app));
             $destinationFilesystemFactory = $this->getPublisherFilesystemFactory($app);
@@ -67,6 +72,7 @@ class AppServiceProvider extends ServiceProvider
                 $this->app->make(ViewFactoryContract::class),
                 $sourceFilesystem,
                 $destinationFilesystemFactory,
+                $this->app->make(PostSitemapGenerator::class),
                 realpath(resource_path('sites')),
                 $app['config']['app.publisher_page_size']
             );

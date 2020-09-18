@@ -6,6 +6,7 @@ namespace Tests\Unit\Services;
 
 use App\Contracts\Models\Post;
 use App\Services\FilesystemPostPublisher;
+use App\Services\PostSitemapGenerator;
 use App\Services\SiteFilesystemFactoryInterface;
 use DateTime;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
@@ -135,6 +136,12 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with('assets/' . $assetFiles[1]['basename'], 'asset2 content')
                 ->times(1)
                 ->andReturn(true);
+
+            // Sitemap
+            $mock->shouldReceive('put')
+                ->with('sitemap.xml', '<xml></xml>')
+                ->times(1)
+                ->andReturn(true);
         });
         $destinationFilesystemFactory = Mockery::mock(SiteFilesystemFactoryInterface::class, function ($mock) use ($site, $destinationFilesystem) {
             $mock->shouldReceive('getSiteFilesystem')
@@ -142,7 +149,13 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn($destinationFilesystem);
         });
-        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $resourcePath, 0);
+        $sitemapGenerator = Mockery::mock(PostSitemapGenerator::class, function ($mock) use ($posts, $site) {
+            $mock->shouldReceive('generateSitemap')
+                ->with($posts, $site)
+                ->times(1)
+                ->andReturn('<xml></xml>');
+        });
+        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $sitemapGenerator, $resourcePath, 0);
 
         // Execute
         $result = $publisher->publish($posts, $site);
@@ -304,6 +317,12 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with('assets/' . $assetFiles[1]['basename'], 'asset2 content')
                 ->times(1)
                 ->andReturn(true);
+
+            // Sitemap
+            $mock->shouldReceive('put')
+                ->with('sitemap.xml', '<xml></xml>')
+                ->times(1)
+                ->andReturn(true);
         });
         $destinationFilesystemFactory = Mockery::mock(SiteFilesystemFactoryInterface::class, function ($mock) use ($site, $destinationFilesystem) {
             $mock->shouldReceive('getSiteFilesystem')
@@ -311,7 +330,13 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn($destinationFilesystem);
         });
-        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $resourcePath, $pageSize);
+        $sitemapGenerator = Mockery::mock(PostSitemapGenerator::class, function ($mock) use ($posts, $site) {
+            $mock->shouldReceive('generateSitemap')
+                ->with($posts, $site)
+                ->times(1)
+                ->andReturn('<xml></xml>');
+        });
+        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $sitemapGenerator, $resourcePath, $pageSize);
 
         // Execute
         $result = $publisher->publish($posts, $site);
@@ -431,6 +456,12 @@ class FilesystemPostPublisherTest extends TestCase
                 ->with('assets/' . $assetFiles[1]['basename'], 'asset2 content')
                 ->times(1)
                 ->andReturn(true);
+
+            // Sitemap
+            $mock->shouldReceive('put')
+                ->with('sitemap.xml', '<xml></xml>')
+                ->times(1)
+                ->andReturn(true);
         });
         $destinationFilesystemFactory = Mockery::mock(SiteFilesystemFactoryInterface::class, function ($mock) use ($site, $destinationFilesystem) {
             $mock->shouldReceive('getSiteFilesystem')
@@ -438,7 +469,13 @@ class FilesystemPostPublisherTest extends TestCase
                 ->times(1)
                 ->andReturn($destinationFilesystem);
         });
-        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $resourcePath, 0);
+        $sitemapGenerator = Mockery::mock(PostSitemapGenerator::class, function ($mock) use ($posts, $site) {
+            $mock->shouldReceive('generateSitemap')
+                ->with($posts, $site)
+                ->times(1)
+                ->andReturn('<xml></xml>');
+        });
+        $publisher = new FilesystemPostPublisher($viewFactory, $sourceFilesystem, $destinationFilesystemFactory, $sitemapGenerator, $resourcePath, 0);
 
         // Execute
         $result = $publisher->publish($posts, $site);

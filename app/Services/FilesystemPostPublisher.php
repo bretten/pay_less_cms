@@ -28,6 +28,11 @@ class FilesystemPostPublisher implements PostPublisherInterface
     private SiteFilesystemFactoryInterface $destinationFilesystemFactory;
 
     /**
+     * @var PostSitemapGenerator
+     */
+    private PostSitemapGenerator $sitemapGenerator;
+
+    /**
      * @var string
      */
     private string $resourcePath;
@@ -43,17 +48,20 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * @param ViewFactoryContract $viewFactory
      * @param FilesystemInterface $sourceFilesystem
      * @param SiteFilesystemFactoryInterface $destinationFilesystemFactory
+     * @param PostSitemapGenerator $sitemapGenerator
      * @param string $resourcePath
      * @param int $pageSize
      */
     public function __construct(ViewFactoryContract $viewFactory, FilesystemInterface $sourceFilesystem,
                                 SiteFilesystemFactoryInterface $destinationFilesystemFactory,
+                                PostSitemapGenerator $sitemapGenerator,
                                 string $resourcePath,
                                 int $pageSize)
     {
         $this->viewFactory = $viewFactory;
         $this->sourceFilesystem = $sourceFilesystem;
         $this->destinationFilesystemFactory = $destinationFilesystemFactory;
+        $this->sitemapGenerator = $sitemapGenerator;
         $this->resourcePath = $resourcePath;
         $this->pageSize = $pageSize;
     }
@@ -89,6 +97,9 @@ class FilesystemPostPublisher implements PostPublisherInterface
             }
             $success = $success && $destinationFilesystem->put('assets' . str_replace($assetsToPublishPath, "", $file['dirname']) . DIRECTORY_SEPARATOR . $file['basename'], $this->sourceFilesystem->read($file['path']));
         }
+
+        // Generate sitemap
+        $success = $success && $destinationFilesystem->put('sitemap.xml', $this->sitemapGenerator->generateSitemap($posts, $site));
 
         return $success;
     }

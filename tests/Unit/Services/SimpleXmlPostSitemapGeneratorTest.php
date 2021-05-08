@@ -45,6 +45,6 @@ class SimpleXmlPostSitemapGeneratorTest extends TestCase
         $actual = '<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://site1.exampletld</loc><lastmod>2020-09-17</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url><url><loc>https://www.site1.exampletld</loc><lastmod>2020-09-17</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url><url><loc>https://site1.exampletld/url1-test-name.html</loc><lastmod>2020-09-17</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url><url><loc>https://site1.exampletld/dir1/dir2/url2.html</loc><lastmod>2020-09-17</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url><url><loc>https://site1.exampletld/url4.html</loc><lastmod>2020-09-17</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url></urlset>
 ';
-        $this->assertEquals($result, $actual);
+        $this->assertEquals(str_replace(array("\n", "\r"), '', $result), str_replace(array("\n", "\r"), '', $actual));
     }
 }

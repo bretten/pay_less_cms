@@ -9,6 +9,11 @@
 
 define('LARAVEL_START', microtime(true));
 
+// Upgrade from Laravel 7.x to 8.x
+if (file_exists(__DIR__.'/../storage/framework/maintenance.php')) {
+    require __DIR__.'/../storage/framework/maintenance.php';
+}
+
 /*
 |--------------------------------------------------------------------------
 | Register The Auto Loader

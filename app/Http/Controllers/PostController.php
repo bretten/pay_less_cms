@@ -19,7 +19,7 @@ class PostController extends Controller
     /**
      * @var SiteFilesystemFactoryInterface
      */
-    private $siteFileSystemFactory;
+    private SiteFilesystemFactoryInterface $siteFileSystemFactory;
 
     /**
      * Constructor

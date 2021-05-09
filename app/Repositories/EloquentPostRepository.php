@@ -5,7 +5,7 @@ namespace App\Repositories;
 
 
 use App\Contracts\Models\Post as PostContract;
-use App\Post;
+use App\Models\Post;
 
 class EloquentPostRepository implements PostRepositoryInterface
 {

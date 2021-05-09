@@ -5,7 +5,7 @@ namespace Tests\Unit\Repositories;
 
 
 use App\Contracts\Models\Post as PostContract;
-use App\Post;
+use App\Models\Post;
 use App\Repositories\EloquentPostRepository;
 use DateTime;
 use Illuminate\Database\Eloquent\Builder;

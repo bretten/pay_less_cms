@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use App\Contracts\Models\Post as PostContract;
 use Illuminate\Database\Eloquent\Model;

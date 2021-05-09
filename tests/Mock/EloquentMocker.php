@@ -4,7 +4,7 @@
 namespace Tests\Mock;
 
 
-use App\Post;
+use App\Models\Post;
 use DateTime;
 use Mockery;
 

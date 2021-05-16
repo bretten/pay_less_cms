@@ -7,6 +7,12 @@ terraform {
     }
 
     required_version = ">= 0.15.3"
+
+    backend "s3" {
+        bucket = "_STATE_BUCKET_NAME_"
+        key = "_SITE_NAME_/terraform.tfstate"
+        region = "_REGION_NAME_"
+    }
 }
 
 provider "aws" {

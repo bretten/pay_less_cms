@@ -17,15 +17,20 @@ RUN \
   # AWS
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && aws/install
 
+WORKDIR /home
+
+COPY main.tf /home/main.tf
+
 ENV AWS_ACCESS_KEY_ID=placeholder
 ENV AWS_SECRET_ACCESS_KEY=placeholder
 ENV AWS_REGION=us-west-2
 ENV SITE_NAME=placeholder
+ENV STATE_BUCKET_NAME=placeholder
 
-WORKDIR /home
+ENTRYPOINT ["/bin/sh", "-c"]
 
-RUN apt-get install -y rpl
+# Create infrastructure
+#CMD rpl -w -f "_SITE_NAME_" $SITE_NAME main.tf && rpl -w -f "_REGION_NAME_" $AWS_REGION main.tf && rpl -w -f "_STATE_BUCKET_NAME_" $STATE_BUCKET_NAME main.tf && terraform init && terraform apply -auto-approve
 
-COPY main.tf /home/main.tf
-
-CMD rpl -w -f "_SITE_NAME_" $SITE_NAME main.tf && rpl -w -f "_REGION_NAME_" $AWS_REGION main.tf && terraform init && terraform apply -auto-approve
+# Destroy infrastructure
+#CMD rpl -w -f "_SITE_NAME_" $SITE_NAME main.tf && rpl -w -f "_REGION_NAME_" $AWS_REGION main.tf && rpl -w -f "_STATE_BUCKET_NAME_" $STATE_BUCKET_NAME main.tf && terraform init && terraform apply -destroy -auto-approve

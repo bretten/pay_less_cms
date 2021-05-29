@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,7 @@ Route::get('/', function () {
 });
 
 Route::resource('posts', PostController::class);
+Route::resource('sites', SiteController::class);
 Route::post('/publish/site/{site?}', function ($site = null) {
     if ($site) {
         Artisan::call("posts:publish --site=$site");

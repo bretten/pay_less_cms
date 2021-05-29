@@ -86,7 +86,7 @@ class EloquentSiteRepositoryTest extends TestCase
         $expected = true;
         $site = Mockery::mock(Site::class, function ($mock) use ($expected) {
             $mock->shouldReceive('setAttribute')
-                ->with('domainName', 'site1')
+                ->with('domain_name', 'site1')
                 ->times(1);
             $mock->shouldReceive('setAttribute')
                 ->with('title', 'title1')

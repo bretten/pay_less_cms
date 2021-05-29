@@ -24,7 +24,7 @@ class EloquentMocker
     public static function mockSite(string $domainName, string $title, DateTime $created_at, DateTime $updated_at, $deleted_at)
     {
         return Mockery::mock(Site::class, function ($mock) use ($domainName, $title, $created_at, $updated_at, $deleted_at) {
-            $mock->shouldReceive('getAttribute')->with('domainName')
+            $mock->shouldReceive('getAttribute')->with('domain_name')
                 ->andReturn($domainName);
             $mock->shouldReceive('getAttribute')->with('title')
                 ->andReturn($title);

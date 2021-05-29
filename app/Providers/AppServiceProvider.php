@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Http\Controllers\PostController;
 use App\Repositories\AwsDynamoDbPostRepository;
 use App\Repositories\EloquentPostRepository;
+use App\Repositories\EloquentSiteRepository;
 use App\Repositories\PostRepositoryInterface;
+use App\Repositories\SiteRepositoryInterface;
 use App\Services\AwsS3SiteFilesystemFactory;
 use App\Services\FilesystemPostPublisher;
 use App\Services\LocalSiteFilesystemFactory;
@@ -54,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
             });
         } else {
             $this->app->bind(PostRepositoryInterface::class, EloquentPostRepository::class);
+            $this->app->bind(SiteRepositoryInterface::class, EloquentSiteRepository::class);
         }
 
         // Filesystem

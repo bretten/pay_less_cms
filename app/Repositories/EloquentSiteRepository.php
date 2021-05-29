@@ -58,7 +58,7 @@ class EloquentSiteRepository implements SiteRepositoryInterface
      */
     public function create(string $domainName, string $title)
     {
-        $this->model->domainName = $domainName;
+        $this->model->domain_name = $domainName;
         $this->model->title = $title;
         return $this->model->save();
     }

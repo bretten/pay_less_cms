@@ -52,18 +52,33 @@ class PostControllerTest extends TestCase
 
         // Assert
         $response->assertStatus(200);
+        $actualContentWithCsrfRemoved = $this->removeCsrf($response->baseResponse->content());
+
+        usort($posts, function (Post $a, Post $b) { // The controller sorts the post by descending timestamp
+            return $b->createdAt->getTimestamp() - $a->createdAt->getTimestamp();
+        });
+        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.index', ['posts' => $posts]); // This needs to be after calling $this->get
+
+        $this->assertEquals($this->removeCsrf($expectedResponse->content()), $actualContentWithCsrfRemoved);
     }
 
     /**
-     * Test create method is not implemented
+     * Test that the create method displays a view
      *
      * @return void
      */
     public function testCreate()
     {
+        // Setup
+        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.create');
+
+        // Execute
         $response = $this->get('/posts/create');
 
+        // Assert
         $response->assertStatus(200);
+        $actualContentWithCsrfRemoved = $this->removeCsrf($response->baseResponse->content());
+        $this->assertEquals($expectedResponse->content(), $actualContentWithCsrfRemoved);
     }
 
     /**
@@ -194,8 +209,7 @@ class PostControllerTest extends TestCase
 
         // Assert
         $response->assertStatus(200);
-        $actualContentWithCsrfRemoved = preg_replace('/<input type="hidden" name="_token" value="(.*?)">/', '<input type="hidden" name="_token" value="">', $response->baseResponse->content());
-        $actualContentWithCsrfRemoved = preg_replace('/xhr.setRequestHeader\(\'X-CSRF-Token\', \'(.*?)\'\);/', 'xhr.setRequestHeader(\'X-CSRF-Token\', \'\');', $actualContentWithCsrfRemoved);
+        $actualContentWithCsrfRemoved = $this->removeCsrf($response->baseResponse->content());
         $this->assertEquals($expectedResponse->content(), $actualContentWithCsrfRemoved);
     }
 
@@ -367,5 +381,18 @@ class PostControllerTest extends TestCase
             'location' => $expectedUploadFullPath
         ]);
         $response->assertStatus(200);
+    }
+
+    /**
+     * Removes the CSRF token value from a form's markup
+     *
+     * @param string $content
+     * @return string
+     */
+    private function removeCsrf(string $content)
+    {
+        $actualContentWithCsrfRemoved = preg_replace('/<input type="hidden" name="_token" value="(.*?)">/', '<input type="hidden" name="_token" value="">', $content);
+        $actualContentWithCsrfRemoved = preg_replace('/xhr.setRequestHeader\(\'X-CSRF-Token\', \'(.*?)\'\);/', 'xhr.setRequestHeader(\'X-CSRF-Token\', \'\');', $actualContentWithCsrfRemoved);
+        return $actualContentWithCsrfRemoved;
     }
 }

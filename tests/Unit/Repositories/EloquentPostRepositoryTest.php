@@ -25,12 +25,12 @@ class EloquentPostRepositoryTest extends TestCase
     {
         // Setup
         $expectedPost1 = new PostContract(1, 'site1', 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
-        $expectedPost2 = new PostContract(2, 'site1', 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
+        $expectedPost2 = new PostContract(2, 'site1', 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'));
         $expectedPosts = [
             $expectedPost1, $expectedPost2
         ];
         $eloquentPost1 = EloquentMocker::mockPost(1, 'site1', 'title1', 'content1', 'url1', new DateTime('2020-08-15 01:01:01'), new DateTime('2020-08-15 01:01:01'), null);
-        $eloquentPost2 = EloquentMocker::mockPost(2, 'site1', 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), null);
+        $eloquentPost2 = EloquentMocker::mockPost(2, 'site1', 'title2', 'content2', 'url2', new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'), new DateTime('2020-08-15 02:02:02'));
         $eloquentPosts = [
             $eloquentPost1, $eloquentPost2
         ];

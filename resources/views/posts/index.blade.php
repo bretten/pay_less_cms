@@ -15,8 +15,8 @@
             </button>
             <div class="dropdown-menu" aria-labelledby="site-dropdown">
                 <a class="dropdown-item" href="/{{ Route::prefix(config('app.url_prefix'))->get('posts')->uri() . '?site=all' }}">All</a>
-                @foreach (config('app.managed_sites') as $site)
-                    <a class="dropdown-item" href="/{{ Route::prefix(config('app.url_prefix'))->get('posts')->uri() . "?site=$site" }}">{{ $site }}</a>
+                @foreach ($sites as $site)
+                    <a class="dropdown-item" href="/{{ Route::prefix(config('app.url_prefix'))->get('posts')->uri() . "?site=$site->domainName" }}">{{ $site->domainName }}</a>
                 @endforeach
             </div>
         </div>

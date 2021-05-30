@@ -150,10 +150,7 @@ class AppServiceProvider extends ServiceProvider
         if ($app['config']['filesystems.publisher_default'] == 's3') {
             // S3
             return new AwsS3SiteFilesystemFactory(
-                array_combine(
-                    $app['config']['app.managed_sites'],
-                    $app['config']['filesystems.publisher_disks.s3.managed_sites_buckets']
-                ),
+                $this->app->make(SiteRepositoryInterface::class),
                 new S3Client([
                     'credentials' => [
                         'key' => $app['config']['filesystems.publisher_disks.s3.key'],
@@ -166,15 +163,9 @@ class AppServiceProvider extends ServiceProvider
             );
         } else {
             // Local
-            $localRootDirs = $app['config']['filesystems.publisher_disks.local.managed_sites_local_root_dirs'];
-            array_walk($localRootDirs, function (&$value) use ($app) {
-                $value = $app['config']['filesystems.publisher_disks.local.published_files_root'] . DIRECTORY_SEPARATOR . $value;
-            });
             return new LocalSiteFilesystemFactory(
-                array_combine(
-                    $app['config']['app.managed_sites'],
-                    $localRootDirs
-                )
+                $app['config']['filesystems.publisher_disks.local.published_files_root'],
+                $this->app->make(SiteRepositoryInterface::class)
             );
         }
     }

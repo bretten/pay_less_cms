@@ -4,9 +4,9 @@ namespace App\Console\Commands;
 
 use App\Contracts\Models\Post;
 use App\Repositories\PostRepositoryInterface;
+use App\Repositories\SiteRepositoryInterface;
 use App\Services\PostPublisherInterface;
 use Illuminate\Console\Command;
-use Illuminate\Foundation\Application;
 
 class PublishPosts extends Command
 {
@@ -39,12 +39,18 @@ class PublishPosts extends Command
      *
      * @param PostRepositoryInterface $repo
      * @param PostPublisherInterface $publisher
-     * @param Application $app
      * @return void
      */
-    public function handle(PostRepositoryInterface $repo, PostPublisherInterface $publisher, Application $app)
+    public function handle(PostRepositoryInterface $repo, SiteRepositoryInterface $siteRepo, PostPublisherInterface $publisher)
     {
-        $sites = ($this->option('site') ? [$this->option('site')] : null) ?? $app['config']['app.managed_sites'];
+        $siteOption = $this->option('site') ? $this->option('site') : null;
+        if ($siteOption) {
+            $sites = [
+                $siteRepo->getByDomainName($siteOption)
+            ];
+        } else {
+            $sites = $siteRepo->getAll();
+        }
 
         $allPosts = $repo->getAll();
         if (!$allPosts) {
@@ -53,7 +59,11 @@ class PublishPosts extends Command
         }
 
         foreach ($sites as $site) {
-            $this->publishSite($publisher, $site, $allPosts);
+            if ($site->deletedAt) {
+                $this->info("Skipping $site->domainName because it is deleted");
+                continue;
+            }
+            $this->publishSite($publisher, $site->domainName, $allPosts);
         }
     }
 

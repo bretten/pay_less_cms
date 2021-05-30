@@ -5,10 +5,11 @@ namespace Tests\Feature\Console\Commands;
 
 
 use App\Contracts\Models\Post;
+use App\Contracts\Models\Site;
 use App\Repositories\PostRepositoryInterface;
+use App\Repositories\SiteRepositoryInterface;
 use App\Services\PostPublisherInterface;
 use DateTime;
-use Illuminate\Foundation\Application;
 use Mockery;
 use Tests\TestCase;
 
@@ -30,11 +31,22 @@ class PublishPostsTest extends TestCase
         $expectedPosts = [
             $post1, $post2, $post3, $post4, $post5
         ];
-        $sites = ['site1', 'site2', 'site3'];
+
+        $site1 = new Site('site1', 'title1', new DateTime('2021-05-29 01:01:01'), new DateTime('2021-05-29 01:01:01'), null);
+        $site2 = new Site('site2', 'title2', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), null);
+        $site3 = new Site('site3', 'title3', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), null);
+        $site4 = new Site('site4', 'title4', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'));
+        $sites = [
+            $site1, $site2, $site3, $site4
+        ];
 
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($expectedPosts) {
             $mock->shouldReceive('getAll')
                 ->andReturns($expectedPosts);
+        });
+        $siteRepo = Mockery::mock(SiteRepositoryInterface::class, function ($mock) use ($sites) {
+            $mock->shouldReceive('getAll')
+                ->andReturns($sites);
         });
         $publisher = Mockery::mock(PostPublisherInterface::class, function ($mock) use ($expectedPosts) {
             $mock->shouldReceive('publish')
@@ -47,23 +59,17 @@ class PublishPostsTest extends TestCase
                 ->with([$expectedPosts[4], $expectedPosts[3]], 'site3') // Post order will be sort by descending creation date
                 ->andReturns(true);
         });
-        $app = Mockery::mock(Application::class, function ($mock) use ($sites) {
-            $mock->shouldReceive('offsetGet')
-                ->with('config')
-                ->andReturn([
-                    'app.managed_sites' => $sites
-                ]);
-        });
 
         $this->app->instance(PostRepositoryInterface::class, $repo);
+        $this->app->instance(SiteRepositoryInterface::class, $siteRepo);
         $this->app->instance(PostPublisherInterface::class, $publisher);
-        $this->app->instance(Application::class, $app);
 
         // Execute and Assert
         $this->artisan('posts:publish')
             ->expectsOutput('Successfully published 2 posts for site1')
             ->expectsOutput('Successfully published 1 posts for site2')
-            ->expectsOutput('Successfully published 2 posts for site3');
+            ->expectsOutput('Successfully published 2 posts for site3')
+            ->expectsOutput('Skipping site4 because it is deleted');
     }
 
     /**
@@ -82,23 +88,29 @@ class PublishPostsTest extends TestCase
         $expectedPosts = [
             $post1, $post2, $post3, $post4, $post5
         ];
-        $site = 'site3';
+
+        $site3 = new Site('site3', 'title3', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), null);
 
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($expectedPosts) {
             $mock->shouldReceive('getAll')
                 ->andReturns($expectedPosts);
         });
-        $publisher = Mockery::mock(PostPublisherInterface::class, function ($mock) use ($expectedPosts, $site) {
+        $siteRepo = Mockery::mock(SiteRepositoryInterface::class, function ($mock) use ($site3) {
+            $mock->shouldReceive('getByDomainName')
+                ->andReturns($site3);
+        });
+        $publisher = Mockery::mock(PostPublisherInterface::class, function ($mock) use ($expectedPosts, $site3) {
             $mock->shouldReceive('publish')
-                ->with([$expectedPosts[4], $expectedPosts[3]], $site) // Post order will be sort by descending creation date
+                ->with([$expectedPosts[4], $expectedPosts[3]], $site3->domainName) // Post order will be sort by descending creation date
                 ->andReturns(true);
         });
 
         $this->app->instance(PostRepositoryInterface::class, $repo);
+        $this->app->instance(SiteRepositoryInterface::class, $siteRepo);
         $this->app->instance(PostPublisherInterface::class, $publisher);
 
         // Execute and Assert
-        $this->artisan("posts:publish --site=$site")
+        $this->artisan("posts:publish --site=$site3->domainName")
             ->expectsOutput('Successfully published 2 posts for site3');
     }
 
@@ -115,13 +127,24 @@ class PublishPostsTest extends TestCase
             $mock->shouldReceive('getAll')
                 ->andReturns($expectedPosts);
         });
+        $site1 = new Site('site1', 'title1', new DateTime('2021-05-29 01:01:01'), new DateTime('2021-05-29 01:01:01'), null);
+        $site2 = new Site('site2', 'title2', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), null);
+        $site3 = new Site('site3', 'title3', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), null);
+        $sites = [
+            $site1, $site2, $site3
+        ];
         $publisher = Mockery::mock(PostPublisherInterface::class, function ($mock) use ($expectedPosts) {
             $mock->shouldReceive('publish')
                 ->with($expectedPosts)
                 ->andReturns(true);
         });
+        $siteRepo = Mockery::mock(SiteRepositoryInterface::class, function ($mock) use ($sites) {
+            $mock->shouldReceive('getAll')
+                ->andReturns($sites);
+        });
 
         $this->app->instance(PostRepositoryInterface::class, $repo);
+        $this->app->instance(SiteRepositoryInterface::class, $siteRepo);
         $this->app->instance(PostPublisherInterface::class, $publisher);
 
         // Execute and Assert
@@ -142,19 +165,25 @@ class PublishPostsTest extends TestCase
         $expectedPosts = [
             $post1, $post2
         ];
-        $site = 'site1';
+
+        $site1 = new Site('site1', 'title1', new DateTime('2021-05-29 01:01:01'), new DateTime('2021-05-29 01:01:01'), null);
 
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($expectedPosts) {
             $mock->shouldReceive('getAll')
                 ->andReturns($expectedPosts);
         });
-        $publisher = Mockery::mock(PostPublisherInterface::class, function ($mock) use ($expectedPosts, $site) {
+        $siteRepo = Mockery::mock(SiteRepositoryInterface::class, function ($mock) use ($site1) {
+            $mock->shouldReceive('getByDomainName')
+                ->andReturns($site1);
+        });
+        $publisher = Mockery::mock(PostPublisherInterface::class, function ($mock) use ($expectedPosts, $site1) {
             $mock->shouldReceive('publish')
-                ->with(array_reverse($expectedPosts), $site) // Post order will be sort by descending creation date
+                ->with(array_reverse($expectedPosts), $site1->domainName) // Post order will be sort by descending creation date
                 ->andReturns(false);
         });
 
         $this->app->instance(PostRepositoryInterface::class, $repo);
+        $this->app->instance(SiteRepositoryInterface::class, $siteRepo);
         $this->app->instance(PostPublisherInterface::class, $publisher);
 
         // Execute and Assert

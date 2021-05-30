@@ -3,9 +3,11 @@
 namespace Tests\Feature\Http\Controllers;
 
 use App\Contracts\Models\Post;
+use App\Contracts\Models\Site;
 use App\Http\Controllers\PostController;
 use App\Http\Middleware\AuthenticateByIp;
 use App\Repositories\PostRepositoryInterface;
+use App\Repositories\SiteRepositoryInterface;
 use App\Services\SiteFilesystemFactoryInterface;
 use DateTime;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -40,12 +42,24 @@ class PostControllerTest extends TestCase
         $posts = [
             $post1, $post2
         ];
+
+        $site1 = new Site('site1', 'title1', new DateTime('2021-05-29 01:01:01'), new DateTime('2021-05-29 01:01:01'), null);
+        $sites = [
+            $site1
+        ];
+
         $repo = Mockery::mock(PostRepositoryInterface::class, function ($mock) use ($posts) {
             $mock->shouldReceive('getAll')
                 ->times(1)
                 ->andReturn($posts);
         });
+        $siteRepo = Mockery::mock(SiteRepositoryInterface::class, function ($mock) use ($sites) {
+            $mock->shouldReceive('getAll')
+                ->andReturns($sites);
+        });
+
         $this->app->instance(PostRepositoryInterface::class, $repo);
+        $this->app->instance(SiteRepositoryInterface::class, $siteRepo);
 
         // Execute
         $response = $this->get('/posts');
@@ -57,7 +71,7 @@ class PostControllerTest extends TestCase
         usort($posts, function (Post $a, Post $b) { // The controller sorts the post by descending timestamp
             return $b->createdAt->getTimestamp() - $a->createdAt->getTimestamp();
         });
-        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.index', ['posts' => $posts]); // This needs to be after calling $this->get
+        $expectedResponse = $this->app->make(ResponseFactory::class)->view('posts.index', ['posts' => $posts, 'sites' => $sites]); // This needs to be after calling $this->get
 
         $this->assertEquals($this->removeCsrf($expectedResponse->content()), $actualContentWithCsrfRemoved);
     }

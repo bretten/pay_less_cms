@@ -4,6 +4,7 @@
 namespace App\Services;
 
 
+use App\Repositories\SiteRepositoryInterface;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
@@ -12,9 +13,14 @@ use OutOfRangeException;
 class LocalSiteFilesystemFactory implements SiteFilesystemFactoryInterface
 {
     /**
-     * @var array
+     * @var string $publishedFilesRootPath
      */
-    private array $rootDirs;
+    private string $publishedFilesRootPath;
+
+    /**
+     * @var SiteRepositoryInterface
+     */
+    private SiteRepositoryInterface $siteRepository;
 
     /**
      * @var array
@@ -26,9 +32,10 @@ class LocalSiteFilesystemFactory implements SiteFilesystemFactoryInterface
      *
      * @param array $rootDirs
      */
-    public function __construct(array $rootDirs)
+    public function __construct(string $publishedFilesRootPath, SiteRepositoryInterface $siteRepository)
     {
-        $this->rootDirs = $rootDirs;
+        $this->publishedFilesRootPath = $publishedFilesRootPath;
+        $this->siteRepository = $siteRepository;
         $this->filesystems = [];
     }
 
@@ -44,11 +51,14 @@ class LocalSiteFilesystemFactory implements SiteFilesystemFactoryInterface
             return $this->filesystems[$site];
         }
 
-        if (!array_key_exists($site, $this->rootDirs)) {
-            throw new OutOfRangeException("There is no root directory corresponding to site: $site");
+        $siteEntity = $this->siteRepository->getByDomainName($site);
+        if (!$siteEntity) {
+            throw new OutOfRangeException("There is no site for: $site");
         }
 
-        $filesystem = new Filesystem(new Local($this->rootDirs[$site]));
+        $publishPath = $this->publishedFilesRootPath . DIRECTORY_SEPARATOR . $siteEntity->domainName;
+
+        $filesystem = new Filesystem(new Local($publishPath));
         $this->filesystems[$site] = $filesystem;
 
         return $filesystem;

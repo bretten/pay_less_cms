@@ -23,12 +23,12 @@ class EloquentSiteRepositoryTest extends TestCase
     {
         // Setup
         $expectedSite1 = new SiteContract('site1', 'title1', new DateTime('2021-05-29 01:01:01'), new DateTime('2021-05-29 01:01:01'), null);
-        $expectedSite2 = new SiteContract('site1', 'title2', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'));
+        $expectedSite2 = new SiteContract('site2', 'title2', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'));
         $expectedSites = [
             $expectedSite1, $expectedSite2
         ];
         $eloquentSite1 = EloquentMocker::mockSite('site1', 'title1', new DateTime('2021-05-29 01:01:01'), new DateTime('2021-05-29 01:01:01'), null);
-        $eloquentSite2 = EloquentMocker::mockSite('site1', 'title2', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'));
+        $eloquentSite2 = EloquentMocker::mockSite('site2', 'title2', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'));
         $eloquentSites = [
             $eloquentSite1, $eloquentSite2
         ];

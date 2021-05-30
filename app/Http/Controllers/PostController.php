@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Contracts\Models\Post;
 use App\Repositories\PostRepositoryInterface;
+use App\Repositories\SiteRepositoryInterface;
 use App\Services\SiteFilesystemFactoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -14,7 +15,12 @@ class PostController extends Controller
     /**
      * @var PostRepositoryInterface
      */
-    private $repository;
+    private PostRepositoryInterface $repository;
+
+    /**
+     * @var SiteRepositoryInterface
+     */
+    private SiteRepositoryInterface $siteRepository;
 
     /**
      * @var SiteFilesystemFactoryInterface
@@ -25,11 +31,13 @@ class PostController extends Controller
      * Constructor
      *
      * @param PostRepositoryInterface $repository
+     * @param SiteRepositoryInterface $siteRepository
      * @param SiteFilesystemFactoryInterface $siteFilesystemFactory
      */
-    public function __construct(PostRepositoryInterface $repository, SiteFilesystemFactoryInterface $siteFilesystemFactory)
+    public function __construct(PostRepositoryInterface $repository, SiteRepositoryInterface $siteRepository, SiteFilesystemFactoryInterface $siteFilesystemFactory)
     {
         $this->repository = $repository;
+        $this->siteRepository = $siteRepository;
         $this->siteFileSystemFactory = $siteFilesystemFactory;
     }
 
@@ -61,7 +69,9 @@ class PostController extends Controller
             });
         }
 
-        return response()->view('posts.index', ['posts' => $posts]);
+        $sites = $this->siteRepository->getAll();
+
+        return response()->view('posts.index', ['posts' => $posts, 'sites' => $sites]);
     }
 
     /**

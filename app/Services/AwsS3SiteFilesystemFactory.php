@@ -4,6 +4,7 @@
 namespace App\Services;
 
 
+use App\Repositories\SiteRepositoryInterface;
 use Aws\S3\S3Client;
 use League\Flysystem\AwsS3v3\AwsS3Adapter;
 use League\Flysystem\Filesystem;
@@ -12,9 +13,9 @@ use OutOfRangeException;
 class AwsS3SiteFilesystemFactory implements SiteFilesystemFactoryInterface
 {
     /**
-     * @var array
+     * @var SiteRepositoryInterface
      */
-    private array $siteBuckets;
+    private SiteRepositoryInterface $siteRepository;
 
     /**
      * @var S3Client
@@ -29,12 +30,12 @@ class AwsS3SiteFilesystemFactory implements SiteFilesystemFactoryInterface
     /**
      * Constructor
      *
-     * @param array $siteBuckets
+     * @param SiteRepositoryInterface $siteRepository
      * @param S3Client $s3Client
      */
-    public function __construct(array $siteBuckets, S3Client $s3Client)
+    public function __construct(SiteRepositoryInterface $siteRepository, S3Client $s3Client)
     {
-        $this->siteBuckets = $siteBuckets;
+        $this->siteRepository = $siteRepository;
         $this->s3Client = $s3Client;
         $this->filesystems = [];
     }
@@ -51,11 +52,14 @@ class AwsS3SiteFilesystemFactory implements SiteFilesystemFactoryInterface
             return $this->filesystems[$site];
         }
 
-        if (!array_key_exists($site, $this->siteBuckets)) {
-            throw new OutOfRangeException("There is no bucket corresponding to site: $site");
+        $siteEntity = $this->siteRepository->getByDomainName($site);
+        if (!$siteEntity) {
+            throw new OutOfRangeException("There is no site for: $site");
         }
 
-        $filesystem = new Filesystem(new AwsS3Adapter($this->s3Client, $this->siteBuckets[$site]));
+        $bucketName = $siteEntity->domainName;
+
+        $filesystem = new Filesystem(new AwsS3Adapter($this->s3Client, $bucketName));
         $this->filesystems[$site] = $filesystem;
 
         return $filesystem;

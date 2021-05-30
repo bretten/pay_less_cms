@@ -4,8 +4,11 @@
 namespace Tests\Unit\Services;
 
 
+use App\Contracts\Models\Site;
+use App\Repositories\SiteRepositoryInterface;
 use App\Services\AwsS3SiteFilesystemFactory;
 use Aws\S3\S3Client;
+use DateTime;
 use Mockery;
 use OutOfRangeException;
 use PHPUnit\Framework\TestCase;
@@ -20,17 +23,25 @@ class AwsS3SiteFilesystemFactoryTest extends TestCase
     public function testGetSiteFilesystem()
     {
         // Setup
-        $siteBuckets = [
-            'site1' => 'bucket1',
-            'site2' => 'bucket2'
-        ];
-        $factory = new AwsS3SiteFilesystemFactory($siteBuckets, Mockery::mock(S3Client::class));
+        $site1 = new Site('site1', 'title1', new DateTime('2021-05-29 01:01:01'), new DateTime('2021-05-29 01:01:01'), null);
+        $site2 = new Site('site2', 'title2', new DateTime('2021-05-29 02:02:02'), new DateTime('2021-05-29 02:02:02'), null);
+        $siteRepo = Mockery::mock(SiteRepositoryInterface::class, function ($mock) use ($site1, $site2) {
+            $mock->shouldReceive('getByDomainName')
+                ->with('site1')
+                ->andReturns($site1);
+            $mock->shouldReceive('getByDomainName')
+                ->with('site2')
+                ->andReturns($site2);
+        });
+        $factory = new AwsS3SiteFilesystemFactory($siteRepo, Mockery::mock(S3Client::class));
 
         // Execute
         $result = $factory->getSiteFilesystem('site1');
+        $result2 = $factory->getSiteFilesystem('site2');
 
         // Assert
-        $this->assertEquals('bucket1', $result->getAdapter()->getBucket());
+        $this->assertEquals('site1', $result->getAdapter()->getBucket());
+        $this->assertEquals('site2', $result2->getAdapter()->getBucket());
     }
 
     /**
@@ -41,15 +52,21 @@ class AwsS3SiteFilesystemFactoryTest extends TestCase
     public function testThrowsExceptionForUnknownSite()
     {
         // Setup
-        $siteBuckets = [
-            'site1' => 'bucket1',
-            'site2' => 'bucket2'
-        ];
-        $factory = new AwsS3SiteFilesystemFactory($siteBuckets, Mockery::mock(S3Client::class));
+        $site1 = new Site('site1', 'title1', new DateTime('2021-05-29 01:01:01'), new DateTime('2021-05-29 01:01:01'), null);
+        $site2 = null;
+        $siteRepo = Mockery::mock(SiteRepositoryInterface::class, function ($mock) use ($site1, $site2) {
+            $mock->shouldReceive('getByDomainName')
+                ->with('site1')
+                ->andReturns($site1);
+            $mock->shouldReceive('getByDomainName')
+                ->with('site2')
+                ->andReturns($site2);
+        });
+        $factory = new AwsS3SiteFilesystemFactory($siteRepo, Mockery::mock(S3Client::class));
 
         // Execute and Assert
         $this->expectException(OutOfRangeException::class);
-        $this->expectExceptionMessage('There is no bucket corresponding to site: site3');
-        $factory->getSiteFilesystem('site3');
+        $this->expectExceptionMessage('There is no site for: site2');
+        $factory->getSiteFilesystem('site2');
     }
 }

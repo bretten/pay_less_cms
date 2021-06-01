@@ -17,10 +17,10 @@ interface SiteRepositoryInterface
     /**
      * Should return a Site by the specified domain name
      *
-     * @param $domainName
+     * @param string $domainName
      * @return Site
      */
-    public function getByDomainName($domainName);
+    public function getByDomainName(string $domainName);
 
     /**
      * Should create a new Site
@@ -43,8 +43,8 @@ interface SiteRepositoryInterface
     /**
      * Should delete a Site
      *
-     * @param $domainName
+     * @param string $domainName
      * @return bool
      */
-    public function delete($domainName);
+    public function delete(string $domainName);
 }

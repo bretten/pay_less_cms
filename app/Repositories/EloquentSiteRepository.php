@@ -41,10 +41,10 @@ class EloquentSiteRepository implements SiteRepositoryInterface
     /**
      * Returns the Site by the domain name
      *
-     * @param $domainName
+     * @param string $domainName
      * @return SiteContract
      */
-    public function getByDomainName($domainName)
+    public function getByDomainName(string $domainName)
     {
         return $this->model->findOrFail($domainName)->toSimple();
     }
@@ -80,10 +80,10 @@ class EloquentSiteRepository implements SiteRepositoryInterface
     /**
      * Deletes a Site
      *
-     * @param $domainName
+     * @param string $domainName
      * @return bool
      */
-    public function delete($domainName)
+    public function delete(string $domainName)
     {
         $this->model = $this->model->find($domainName);
         return $this->model->delete();

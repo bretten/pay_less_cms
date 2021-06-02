@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Repositories;
+namespace Tests\Unit\Repositories;
 
 
 use App\Contracts\Models\Post;
@@ -28,15 +28,22 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         // Setup
         $table = 'test-table';
         $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table) {
-            $mock->shouldReceive('scan')
+            $mock->shouldReceive('query')
                 ->with([
-                    'TableName' => $table
+                    'TableName' => $table,
+                    'IndexName' => 'GSI1',
+                    'ExpressionAttributeValues' => [
+                        ':pk' => [
+                            'S' => 'POST'
+                        ]
+                    ],
+                    'KeyConditionExpression' => 'GSI1PK = :pk'
                 ])
                 ->andReturn(new Result([
                     'LastEvaluatedKey' => 'lastKey1',
                     'Items' => [
                         [
-                            'id' => ['N' => 1],
+                            'id' => ['S' => '1'],
                             'site' => ['S' => 'site1'],
                             'title' => ['S' => 'title1'],
                             'content' => ['S' => 'content1'],
@@ -46,7 +53,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                             'deleted_at' => ['NULL' => true],
                         ],
                         [
-                            'id' => ['N' => 2],
+                            'id' => ['S' => '2'],
                             'site' => ['S' => 'site1'],
                             'title' => ['S' => 'title2'],
                             'content' => ['S' => 'content2'],
@@ -57,15 +64,22 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                         ]
                     ]
                 ]));
-            $mock->shouldReceive('scan')
+            $mock->shouldReceive('query')
                 ->with([
                     'TableName' => $table,
+                    'IndexName' => 'GSI1',
+                    'ExpressionAttributeValues' => [
+                        ':pk' => [
+                            'S' => 'POST'
+                        ]
+                    ],
+                    'KeyConditionExpression' => 'GSI1PK = :pk',
                     'ExclusiveStartKey' => 'lastKey1'
                 ])
                 ->andReturn(new Result([
                     'Items' => [
                         [
-                            'id' => ['N' => 3],
+                            'id' => ['S' => '3'],
                             'site' => ['S' => 'site2'],
                             'title' => ['S' => 'title3'],
                             'content' => ['S' => 'content3'],
@@ -102,24 +116,34 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
     {
         // Setup
         $table = 'test-table';
-        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table) {
-            $mock->shouldReceive('getItem')
+        $id = '1';
+        $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table, $id) {
+            $mock->shouldReceive('query')
                 ->with([
                     'TableName' => $table,
-                    'Key' => [
-                        'id' => ['N' => '1']
-                    ]
+                    'IndexName' => 'GSI1',
+                    'ExpressionAttributeValues' => [
+                        ':pk' => [
+                            'S' => 'POST'
+                        ],
+                        ':sk' => [
+                            'S' => $id
+                        ]
+                    ],
+                    'KeyConditionExpression' => 'GSI1PK = :pk and GSI1SK = :sk'
                 ])
                 ->andReturn(new Result([
-                    'Item' => [
-                        'id' => ['N' => 1],
-                        'site' => ['S' => 'site1'],
-                        'title' => ['S' => 'title1'],
-                        'content' => ['S' => 'content1'],
-                        'human_readable_url' => ['S' => 'url1'],
-                        'created_at' => ['N' => 1597553412],
-                        'updated_at' => ['N' => 1597560710],
-                        'deleted_at' => ['NULL' => true],
+                    'Items' => [
+                        [
+                            'id' => ['S' => $id],
+                            'site' => ['S' => 'site1'],
+                            'title' => ['S' => 'title1'],
+                            'content' => ['S' => 'content1'],
+                            'human_readable_url' => ['S' => 'url1'],
+                            'created_at' => ['N' => 1597553412],
+                            'updated_at' => ['N' => 1597560710],
+                            'deleted_at' => ['NULL' => true]
+                        ]
                     ]
                 ]));
         });
@@ -128,7 +152,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         $expectedPost = new Post(1, 'site1', 'title1', 'content1', 'url1', new DateTime('@1597553412', new DateTimeZone('UTC')), new DateTime('@1597560710', new DateTimeZone('UTC')), null);
 
         // Execute
-        $result = $repo->getById(1);
+        $result = $repo->getById($id);
 
         // Assert
         $this->assertEquals($expectedPost, $result);
@@ -145,14 +169,14 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
         // Setup
         $table = 'test-table';
         $now = new DateTime('2020-08-16 02:01:01');
-        $id = 1;
+        $id = '1';
         $dateTimeFactory = Mockery::mock(DateTimeFactoryInterface::class, function ($mock) use ($now) {
             $mock->shouldReceive('getUtcNow')
                 ->times(1)
                 ->andReturn($now);
         });
         $uniqueIdFactory = Mockery::mock(UniqueIdFactoryInterface::class, function ($mock) use ($id) {
-            $mock->shouldReceive('generateUniqueId')
+            $mock->shouldReceive('generateSortableByTimeUniqueId')
                 ->times(1)
                 ->andReturn($id);
         });
@@ -161,7 +185,10 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                 ->with([
                     'TableName' => $table,
                     'Item' => [
-                        'id' => ['N' => 1],
+                        // Standard attributes
+                        'PK' => ['S' => 'SITE#site1'],
+                        'SK' => ['S' => 'POST#' . $id],
+                        'id' => ['S' => $id],
                         'site' => ['S' => 'site1'],
                         'title' => ['S' => 'title1'],
                         'content' => ['S' => 'content1'],
@@ -169,6 +196,9 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                         'created_at' => ['N' => $now->getTimestamp()],
                         'updated_at' => ['N' => $now->getTimestamp()],
                         'deleted_at' => ['NULL' => true],
+                        // GSI1 attributes
+                        'GSI1PK' => ['S' => 'POST'],
+                        'GSI1SK' => ['S' => $id]
                     ]
                 ])
                 ->andReturn(new Result([
@@ -196,7 +226,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
     {
         // Setup
         $table = 'test-table';
-        $id = 1;
+        $id = '1';
         $site = 'site1 v2';
         $title = 'title1 v2';
         $content = 'content1 v2';
@@ -212,7 +242,8 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                 ->with([
                     'TableName' => $table,
                     'Key' => [
-                        'id' => ['N' => $id]
+                        'PK' => ['S' => 'SITE#site1 v2'],
+                        'SK' => ['S' => 'POST#' . $id]
                     ],
                     'UpdateExpression' => 'set site = :s, title = :t, content = :c, human_readable_url = :url, updated_at = :ua',
                     'ExpressionAttributeValues' => [
@@ -248,7 +279,7 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
     {
         // Setup
         $table = 'test-table';
-        $id = 1;
+        $id = '1';
         $now = new DateTime('2020-08-16 02:01:01');
         $dateTimeFactory = Mockery::mock(DateTimeFactoryInterface::class, function ($mock) use ($now) {
             $mock->shouldReceive('getUtcNow')
@@ -256,11 +287,40 @@ class AwsDynamoDbPostRepositoryTest extends TestCase
                 ->andReturn($now);
         });
         $client = Mockery::mock(DynamoDbClient::class, function ($mock) use ($table, $id, $now) {
+            $mock->shouldReceive('query')
+                ->with([
+                    'TableName' => $table,
+                    'IndexName' => 'GSI1',
+                    'ExpressionAttributeValues' => [
+                        ':pk' => [
+                            'S' => 'POST'
+                        ],
+                        ':sk' => [
+                            'S' => $id
+                        ]
+                    ],
+                    'KeyConditionExpression' => 'GSI1PK = :pk and GSI1SK = :sk'
+                ])
+                ->andReturn(new Result([
+                    'Items' => [
+                        [
+                            'id' => ['S' => $id],
+                            'site' => ['S' => 'site1'],
+                            'title' => ['S' => 'title1'],
+                            'content' => ['S' => 'content1'],
+                            'human_readable_url' => ['S' => 'url1'],
+                            'created_at' => ['N' => 1597553412],
+                            'updated_at' => ['N' => 1597560710],
+                            'deleted_at' => ['NULL' => true]
+                        ]
+                    ]
+                ]));
             $mock->shouldReceive('updateItem')
                 ->with([
                     'TableName' => $table,
                     'Key' => [
-                        'id' => ['N' => $id]
+                        'PK' => ['S' => 'SITE#site1'],
+                        'SK' => ['S' => 'POST#' . $id]
                     ],
                     'UpdateExpression' => 'set updated_at = :ua, deleted_at = :da',
                     'ExpressionAttributeValues' => [

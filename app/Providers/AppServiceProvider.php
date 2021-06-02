@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Http\Controllers\PostController;
 use App\Repositories\AwsDynamoDbPostRepository;
+use App\Repositories\AwsDynamoDbSiteRepository;
 use App\Repositories\EloquentPostRepository;
 use App\Repositories\EloquentSiteRepository;
 use App\Repositories\PostRepositoryInterface;
@@ -53,6 +54,19 @@ class AppServiceProvider extends ServiceProvider
                 ]);
 
                 return new AwsDynamoDbPostRepository($client, $app['config']['database.connections.dynamodb.table'], new DateTimeFactory(), new UniqueIdFactory());
+            });
+            $this->app->bind(SiteRepositoryInterface::class, function ($app) {
+                $client = new DynamoDbClient([
+                    'credentials' => [
+                        'key' => $app['config']['database.connections.dynamodb.key'],
+                        'secret' => $app['config']['database.connections.dynamodb.secret'],
+                        'token' => $app['config']['database.connections.dynamodb.token']
+                    ],
+                    'region' => $app['config']['database.connections.dynamodb.region'],
+                    'version' => 'latest'
+                ]);
+
+                return new AwsDynamoDbSiteRepository($client, $app['config']['database.connections.dynamodb.table'], new DateTimeFactory());
             });
         } else {
             $this->app->bind(PostRepositoryInterface::class, EloquentPostRepository::class);

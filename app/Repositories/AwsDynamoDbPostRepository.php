@@ -64,16 +64,23 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
      */
     public function getAll()
     {
-        $scanParams = [
-            'TableName' => $this->tableName
+        $queryParams = [
+            'TableName' => $this->tableName,
+            'IndexName' => 'GSI1',
+            'ExpressionAttributeValues' => [
+                ':pk' => [
+                    'S' => 'POST'
+                ]
+            ],
+            'KeyConditionExpression' => 'GSI1PK = :pk'
         ];
         $posts = [];
         while (true) {
-            $result = $this->client->scan($scanParams);
+            $result = $this->client->query($queryParams);
             $posts = array_merge($posts, $this->unmarshalPosts($result['Items']));
 
             if (isset($result['LastEvaluatedKey'])) {
-                $scanParams['ExclusiveStartKey'] = $result['LastEvaluatedKey'];
+                $queryParams['ExclusiveStartKey'] = $result['LastEvaluatedKey'];
             } else {
                 break;
             }
@@ -91,13 +98,21 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
      */
     public function getById($id)
     {
-        $result = $this->client->getItem([
+        $queryParams = [
             'TableName' => $this->tableName,
-            'Key' => $this->marshaler->marshalItem([
-                'id' => $id
-            ])
-        ]);
-        return $this->unmarshalPost($result['Item']);
+            'IndexName' => 'GSI1',
+            'ExpressionAttributeValues' => [
+                ':pk' => [
+                    'S' => 'POST'
+                ],
+                ':sk' => [
+                    'S' => $id
+                ]
+            ],
+            'KeyConditionExpression' => 'GSI1PK = :pk and GSI1SK = :sk'
+        ];
+        $result = $this->client->query($queryParams);
+        return !empty($result['Items']) ? $this->unmarshalPost($result['Items'][0]) : null;
     }
 
     /**
@@ -112,15 +127,22 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
     public function create(string $site, string $title, string $content, string $humanReadableUrl)
     {
         $now = $this->dateTimeFactory->getUtcNow();
+        $sortableByTimePostId = $this->uniqueIdFactory->generateSortableByTimeUniqueId();
         $post = [
-            'id' => $this->uniqueIdFactory->generateUniqueId(),
+            // Standard attributes
+            'PK' => $this->getPartitionKey($site),
+            'SK' => $this->getSortKey($sortableByTimePostId),
+            'id' => $sortableByTimePostId,
             'site' => $site,
             'title' => $title,
             'content' => $content,
             'human_readable_url' => $humanReadableUrl,
             'created_at' => $now->getTimestamp(),
             'updated_at' => $now->getTimestamp(),
-            'deleted_at' => null
+            'deleted_at' => null,
+            // GSI1 attributes
+            'GSI1PK' => $this->getGlobalSecondaryIndex1PartitionKey(),
+            'GSI1SK' => $this->getGlobalSecondaryIndex1SortKey($sortableByTimePostId)
         ];
         $result = $this->client->putItem([
             'TableName' => $this->tableName,
@@ -145,7 +167,8 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
         $result = $this->client->updateItem([
             'TableName' => $this->tableName,
             'Key' => $this->marshaler->marshalItem([
-                'id' => $id
+                'PK' => $this->getPartitionKey($site),
+                'SK' => $this->getSortKey($id)
             ]),
             'UpdateExpression' => 'set site = :s, title = :t, content = :c, human_readable_url = :url, updated_at = :ua',
             'ExpressionAttributeValues' => $this->marshaler->marshalItem([
@@ -168,11 +191,16 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
      */
     public function delete($id)
     {
+        // Can only update using the composite key (PK + SK). Cannot update on a GSI. Changes are propagated to the GSIs after the table is updated.
+        // For now, retrieve row first by ID
+        $post = $this->getById($id);
+
         $now = $this->dateTimeFactory->getUtcNow();
         $result = $this->client->updateItem([
             'TableName' => $this->tableName,
             'Key' => $this->marshaler->marshalItem([
-                'id' => $id
+                'PK' => $this->getPartitionKey($post->site),
+                'SK' => $this->getSortKey($id)
             ]),
             'UpdateExpression' => 'set updated_at = :ua, deleted_at = :da',
             'ExpressionAttributeValues' => $this->marshaler->marshalItem([
@@ -181,6 +209,49 @@ class AwsDynamoDbPostRepository implements PostRepositoryInterface
             ])
         ]);
         return 200 == $result['@metadata']['statusCode'];
+    }
+
+    /**
+     * Gets the partition key for a Post
+     *
+     * @param string $site
+     * @return string
+     */
+    private function getPartitionKey(string $site)
+    {
+        return 'SITE#' . $site;
+    }
+
+    /**
+     * Gets the sort key for a Post
+     *
+     * @param string $sortableByTimeId An ID that can be sorted by time as a string
+     * @return string
+     */
+    private function getSortKey(string $sortableByTimeId)
+    {
+        return 'POST#' . $sortableByTimeId;
+    }
+
+    /**
+     * Gets the partition key of Global Secondary Index #1 for a Post
+     *
+     * @return string
+     */
+    private function getGlobalSecondaryIndex1PartitionKey()
+    {
+        return 'POST';
+    }
+
+    /**
+     * Gets the sort key of Global Secondary Index #1 for a Post
+     *
+     * @param string $sortableByTimeId An ID that can be sorted by time as a string
+     * @return string
+     */
+    private function getGlobalSecondaryIndex1SortKey(string $sortableByTimeId)
+    {
+        return $sortableByTimeId;
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Repositories;
+namespace Tests\Unit\Repositories;
 
 
 use App\Contracts\Models\Site;
@@ -33,8 +33,8 @@ class AwsDynamoDbSiteRepositoryTest extends TestCase
                     'IndexName' => 'GSI1',
                     'ExpressionAttributeValues' => [
                         ':pk' => [
-                            'S' => 'SITE',
-                        ],
+                            'S' => 'SITE'
+                        ]
                     ],
                     'KeyConditionExpression' => 'GSI1PK = :pk'
                 ])
@@ -63,8 +63,8 @@ class AwsDynamoDbSiteRepositoryTest extends TestCase
                     'IndexName' => 'GSI1',
                     'ExpressionAttributeValues' => [
                         ':pk' => [
-                            'S' => 'SITE',
-                        ],
+                            'S' => 'SITE'
+                        ]
                     ],
                     'KeyConditionExpression' => 'GSI1PK = :pk',
                     'ExclusiveStartKey' => 'lastKey1'
@@ -207,7 +207,7 @@ class AwsDynamoDbSiteRepositoryTest extends TestCase
                     'TableName' => $table,
                     'Key' => [
                         'PK' => ['S' => 'SITE#site1'],
-                        'SK' => ['S' => 'SITE_DATA#site1'],
+                        'SK' => ['S' => 'SITE_DATA#site1']
                     ],
                     'UpdateExpression' => 'set title = :t, updated_at = :ua',
                     'ExpressionAttributeValues' => [
@@ -252,7 +252,7 @@ class AwsDynamoDbSiteRepositoryTest extends TestCase
                     'TableName' => $table,
                     'Key' => [
                         'PK' => ['S' => 'SITE#site1'],
-                        'SK' => ['S' => 'SITE_DATA#site1'],
+                        'SK' => ['S' => 'SITE_DATA#site1']
                     ],
                     'UpdateExpression' => 'set updated_at = :ua, deleted_at = :da',
                     'ExpressionAttributeValues' => [

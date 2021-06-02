@@ -7,9 +7,9 @@ namespace App\Support;
 interface UniqueIdFactoryInterface
 {
     /**
-     * Should return a unique ID
+     * Should return a unique ID that is sortable by time
      *
      * @return mixed
      */
-    public function generateUniqueId();
+    public function generateSortableByTimeUniqueId();
 }

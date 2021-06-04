@@ -5,6 +5,7 @@ namespace App\Services;
 
 
 use App\Contracts\Models\Post;
+use Exception;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use InvalidArgumentException;
 use League\Flysystem\FileNotFoundException;
@@ -71,39 +72,34 @@ class FilesystemPostPublisher implements PostPublisherInterface
      *
      * @param Post[] $posts
      * @param string $site
-     * @return bool
+     * @return array
      * @throws FileNotFoundException
      */
     public function publish(iterable $posts, string $site)
     {
         $this->viewFactory->addNamespace($site, $this->resourcePath . DIRECTORY_SEPARATOR . $site);
-        $success = true;
 
         $destinationFilesystem = $this->destinationFilesystemFactory->getSiteFilesystem($site);
 
+        // Will hold the paths of all the files that were published to the destination filesystem
+        $publishedFiles = [];
+
         // Publish posts
-        $success = $success && $this->publishPosts($posts, $site, $destinationFilesystem);
+        $publishedFiles = array_merge($publishedFiles, $this->publishPosts($posts, $site, $destinationFilesystem));
 
         // Publish index files
-        $success = $success && $this->publishPostIndexes($posts, $site, $destinationFilesystem);
+        $publishedFiles = array_merge($publishedFiles, $this->publishPostIndexes($posts, $site, $destinationFilesystem));
 
-        // Copy assets
-        $destinationFilesystem->deleteDir('assets');
-        $assetsToPublishPath = ($site ? $site . DIRECTORY_SEPARATOR : '') . 'assets';
-        $files = $this->sourceFilesystem->listContents($assetsToPublishPath, true);
-        foreach ($files as $file) {
-            if ($file['type'] == 'dir') {
-                continue;
-            }
-            $success = $success && $destinationFilesystem->put('assets' . str_replace($assetsToPublishPath, "", $file['dirname']) . DIRECTORY_SEPARATOR . $file['basename'], $this->sourceFilesystem->read($file['path']));
-        }
+        // Publish assets
+        $publishedFiles = array_merge($publishedFiles, $this->publishAssets($site, $destinationFilesystem));
 
-        // Generate sitemap
-        $success = $success && $destinationFilesystem->put('sitemap.xml', $this->sitemapGenerator->generateSitemap($posts, $site), [
-                'mimetype' => 'application/xml'
-            ]);
+        // Publish sitemap
+        $publishedFiles = array_merge($publishedFiles, $this->publishSitemap($posts, $site, $destinationFilesystem));
 
-        return $success;
+        // Remove stale files that weren't published in this execution
+        $this->removeStaleFiles($publishedFiles, $destinationFilesystem);
+
+        return $publishedFiles;
     }
 
     /**
@@ -112,11 +108,12 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * @param Post[] $posts
      * @param string $site
      * @param FilesystemInterface $destinationFilesystem
-     * @return bool
+     * @return array
+     * @throws Exception
      */
     private function publishPosts(iterable $posts, string $site, FilesystemInterface $destinationFilesystem)
     {
-        $success = true;
+        $publishedFiles = [];
 
         foreach ($posts as $post) {
 
@@ -128,12 +125,19 @@ class FilesystemPostPublisher implements PostPublisherInterface
                 continue;
             }
 
-            $success = $success && $destinationFilesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site), [
+            // Publish the post
+            if (false == $destinationFilesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site), [
                     'mimetype' => 'text/html'
-                ]);
+                ])
+            ) {
+                throw new Exception("Unable to publish post: $post->id, $post->humanReadableUrl");
+            }
+
+            // Add the post to the collection of published files
+            $publishedFiles[] = $post->humanReadableUrl;
         }
 
-        return $success;
+        return $publishedFiles;
     }
 
     /**
@@ -143,11 +147,12 @@ class FilesystemPostPublisher implements PostPublisherInterface
      * @param Post[] $posts
      * @param string $site
      * @param FilesystemInterface $destinationFilesystem
-     * @return bool
+     * @return array
+     * @throws Exception
      */
     private function publishPostIndexes(iterable $posts, string $site, FilesystemInterface $destinationFilesystem)
     {
-        $success = true;
+        $publishedFiles = [];
 
         // Filter out deleted posts
         $posts = array_values(array_filter($posts, function ($post) {
@@ -167,12 +172,87 @@ class FilesystemPostPublisher implements PostPublisherInterface
 
             $fileName = $currentPage == 1 ? 'index.html' : "page_$currentPage.html";
 
-            $success = $success && $destinationFilesystem->put($fileName, $this->renderPostIndexView($page, $pagination, $site), [
+            // Write the index file to the filesystem
+            if (false == $destinationFilesystem->put($fileName, $this->renderPostIndexView($page, $pagination, $site), [
                     'mimetype' => 'text/html'
-                ]);
+                ])
+            ) {
+                throw new Exception("Unable to publish index: $fileName");
+            }
+
+            // Add the published file to the list of published files
+            $publishedFiles[] = $fileName;
         }
 
-        return $success;
+        return $publishedFiles;
+    }
+
+    /**
+     * Reads the asset files from the source filesystem and publishes them to the destination filesystem
+     *
+     * @param string $site
+     * @param FilesystemInterface $destinationFilesystem
+     * @return array
+     * @throws FileNotFoundException
+     * @throws Exception
+     */
+    private function publishAssets(string $site, FilesystemInterface $destinationFilesystem)
+    {
+        $publishedFiles = [];
+
+        // Get the assets to publish from the source filesystem
+        $assetsToPublishPath = ($site ? $site . DIRECTORY_SEPARATOR : '') . 'assets';
+        $files = $this->sourceFilesystem->listContents($assetsToPublishPath, true);
+
+        // Publish each asset file
+        foreach ($files as $file) {
+            if ($file['type'] == 'dir') {
+                continue;
+            }
+
+            // Determine the file path of the asset
+            $fileName = 'assets' . str_replace($assetsToPublishPath, "", $file['dirname']) . DIRECTORY_SEPARATOR . $file['basename'];
+
+            // Publish the asset to the destination filesystem
+            if (false == $destinationFilesystem->put($fileName, $this->sourceFilesystem->read($file['path']))) {
+                throw new Exception("Unable to publish asset: $fileName");
+            }
+
+            // Add the asset to the list of published files
+            $publishedFiles[] = $fileName;
+        }
+
+        return $publishedFiles;
+    }
+
+    /**
+     * Publishes the sitemap for all of the site's URLs
+     *
+     * @param iterable $posts
+     * @param string $site
+     * @param FilesystemInterface $destinationFilesystem
+     * @return array
+     * @throws Exception
+     */
+    private function publishSitemap(iterable $posts, string $site, FilesystemInterface $destinationFilesystem)
+    {
+        $publishedFiles = [];
+
+        // Sitemap destination file path
+        $sitemapPath = 'sitemap.xml';
+
+        // Publish the sitemap
+        if (false == $destinationFilesystem->put($sitemapPath, $this->sitemapGenerator->generateSitemap($posts, $site), [
+                'mimetype' => 'application/xml'
+            ])
+        ) {
+            throw new Exception("Unable to publish sitemap: $sitemapPath");
+        }
+
+        // Add the sitemap to the list of published files
+        $publishedFiles[] = $sitemapPath;
+
+        return $publishedFiles;
     }
 
     /**
@@ -207,6 +287,37 @@ class FilesystemPostPublisher implements PostPublisherInterface
             return $this->viewFactory->make("$site::list", ['posts' => $posts, 'pagination' => $pagination]);
         } catch (InvalidArgumentException $e) {
             return $this->viewFactory->make('posts.published.list', ['posts' => $posts, 'pagination' => $pagination]);
+        }
+    }
+
+    /**
+     * Finds any stale files that were not in the list of published files and removes them from the
+     * destination filesystem
+     *
+     * @param array $publishedFiles
+     * @param FilesystemInterface $destinationFilesystem
+     */
+    private function removeStaleFiles(array $publishedFiles, FilesystemInterface $destinationFilesystem)
+    {
+        // List all files in destination filesystem
+        $files = $destinationFilesystem->listContents('', true);
+
+        // Delete files that are not in the collection of files that were published
+        foreach ($files as $file) {
+            if ($file['type'] == 'dir') {
+                continue;
+            }
+
+            // If the file was in the collection of published files, do nothing
+            if (in_array($file['path'], $publishedFiles)) {
+                continue;
+            }
+
+            // If the file wasn't published, then remove it
+            try {
+                $destinationFilesystem->delete($file['path']);
+            } catch (FileNotFoundException $e) {
+            }
         }
     }
 }

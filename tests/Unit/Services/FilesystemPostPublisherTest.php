@@ -99,28 +99,28 @@ class FilesystemPostPublisherTest extends TestCase
         $destinationFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
             // Publish posts
             $mock->shouldReceive('put')
-                ->with('url1', 'custom site: content1 rendered in view')
+                ->with('url1', 'custom site: content1 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
             $mock->shouldReceive('put')
-                ->with('url2', 'custom site: content2 rendered in view')
+                ->with('url2', 'custom site: content2 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
             $mock->shouldReceive('put')
-                ->with('url3', 'custom site: content3 rendered in view')
+                ->with('url3', 'custom site: content3 rendered in view', ['mimetype' => 'text/html'])
                 ->times(0);
             $mock->shouldReceive('delete')
                 ->with('url3')
                 ->times(1)
                 ->andReturn(true);
             $mock->shouldReceive('put')
-                ->with('url4', 'custom site: content4 rendered in view')
+                ->with('url4', 'custom site: content4 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
 
             // Publish index file
             $mock->shouldReceive('put')
-                ->with('index.html', 'custom site: posts list rendered in view')
+                ->with('index.html', 'custom site: posts list rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
 
@@ -139,7 +139,7 @@ class FilesystemPostPublisherTest extends TestCase
 
             // Sitemap
             $mock->shouldReceive('put')
-                ->with('sitemap.xml', '<xml></xml>')
+                ->with('sitemap.xml', '<xml></xml>', ['mimetype' => 'application/xml'])
                 ->times(1)
                 ->andReturn(true);
         });
@@ -272,36 +272,36 @@ class FilesystemPostPublisherTest extends TestCase
         $destinationFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
             // Publish posts
             $mock->shouldReceive('put')
-                ->with('url1', 'custom site: content1 rendered in view')
+                ->with('url1', 'custom site: content1 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
             $mock->shouldReceive('put')
-                ->with('url2', 'custom site: content2 rendered in view')
+                ->with('url2', 'custom site: content2 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
             $mock->shouldReceive('put')
-                ->with('url3', 'custom site: content3 rendered in view')
+                ->with('url3', 'custom site: content3 rendered in view', ['mimetype' => 'text/html'])
                 ->times(0);
             $mock->shouldReceive('delete')
                 ->with('url3')
                 ->times(1)
                 ->andReturn(true);
             $mock->shouldReceive('put')
-                ->with('url4', 'custom site: content4 rendered in view')
+                ->with('url4', 'custom site: content4 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
 
             // Publish index file
             $mock->shouldReceive('put')
-                ->with('index.html', 'custom site: posts list page1 rendered in view')
+                ->with('index.html', 'custom site: posts list page1 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
             $mock->shouldReceive('put')
-                ->with('page_2.html', 'custom site: posts list page2 rendered in view')
+                ->with('page_2.html', 'custom site: posts list page2 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
             $mock->shouldReceive('put')
-                ->with('page_3.html', 'custom site: posts list page3 rendered in view')
+                ->with('page_3.html', 'custom site: posts list page3 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
 
@@ -320,7 +320,7 @@ class FilesystemPostPublisherTest extends TestCase
 
             // Sitemap
             $mock->shouldReceive('put')
-                ->with('sitemap.xml', '<xml></xml>')
+                ->with('sitemap.xml', '<xml></xml>', ['mimetype' => 'application/xml'])
                 ->times(1)
                 ->andReturn(true);
         });
@@ -423,15 +423,15 @@ class FilesystemPostPublisherTest extends TestCase
         $destinationFilesystem = Mockery::mock(FilesystemInterface::class, function ($mock) use ($assetFiles) {
             // Publish posts
             $mock->shouldReceive('put')
-                ->with('url1', 'custom site: content1 rendered in view')
+                ->with('url1', 'custom site: content1 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
             $mock->shouldReceive('put')
-                ->with('url2', 'custom site: content2 rendered in view')
+                ->with('url2', 'custom site: content2 rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(false); // Failed
             $mock->shouldReceive('put')
-                ->with('url3', 'custom site: content3 rendered in view')
+                ->with('url3', 'custom site: content3 rendered in view', ['mimetype' => 'text/html'])
                 ->times(0);
             $mock->shouldReceive('delete')
                 ->with('url3')
@@ -440,7 +440,7 @@ class FilesystemPostPublisherTest extends TestCase
 
             // Publish index file
             $mock->shouldReceive('put')
-                ->with('index.html', 'custom site: posts list rendered in view')
+                ->with('index.html', 'custom site: posts list rendered in view', ['mimetype' => 'text/html'])
                 ->times(1)
                 ->andReturn(true);
 
@@ -459,7 +459,7 @@ class FilesystemPostPublisherTest extends TestCase
 
             // Sitemap
             $mock->shouldReceive('put')
-                ->with('sitemap.xml', '<xml></xml>')
+                ->with('sitemap.xml', '<xml></xml>', ['mimetype' => 'application/xml'])
                 ->times(1)
                 ->andReturn(true);
         });

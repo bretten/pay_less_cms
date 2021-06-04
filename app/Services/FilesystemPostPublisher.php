@@ -99,7 +99,9 @@ class FilesystemPostPublisher implements PostPublisherInterface
         }
 
         // Generate sitemap
-        $success = $success && $destinationFilesystem->put('sitemap.xml', $this->sitemapGenerator->generateSitemap($posts, $site));
+        $success = $success && $destinationFilesystem->put('sitemap.xml', $this->sitemapGenerator->generateSitemap($posts, $site), [
+                'mimetype' => 'application/xml'
+            ]);
 
         return $success;
     }
@@ -126,7 +128,9 @@ class FilesystemPostPublisher implements PostPublisherInterface
                 continue;
             }
 
-            $success = $success && $destinationFilesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site));
+            $success = $success && $destinationFilesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site), [
+                    'mimetype' => 'text/html'
+                ]);
         }
 
         return $success;
@@ -163,7 +167,9 @@ class FilesystemPostPublisher implements PostPublisherInterface
 
             $fileName = $currentPage == 1 ? 'index.html' : "page_$currentPage.html";
 
-            $success = $success && $destinationFilesystem->put($fileName, $this->renderPostIndexView($page, $pagination, $site));
+            $success = $success && $destinationFilesystem->put($fileName, $this->renderPostIndexView($page, $pagination, $site), [
+                    'mimetype' => 'text/html'
+                ]);
         }
 
         return $success;

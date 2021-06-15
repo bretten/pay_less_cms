@@ -5,6 +5,7 @@ namespace App\Services;
 
 
 use App\Contracts\Models\Post;
+use DateTime;
 use Exception;
 use Illuminate\Contracts\View\Factory as ViewFactoryContract;
 use InvalidArgumentException;
@@ -125,6 +126,13 @@ class FilesystemPostPublisher implements PostPublisherInterface
                 continue;
             }
 
+            // If the Post has already been published, skip it
+            if ($this->isPostAlreadyPublished($post, $destinationFilesystem)) {
+                // The Post was previously published to the destination filesystem, so flag it as published
+                $publishedFiles[] = $post->humanReadableUrl;
+                continue;
+            }
+
             // Publish the post
             if (false == $destinationFilesystem->put($post->humanReadableUrl, $this->renderPostContentView($post, $site), [
                     'mimetype' => 'text/html'
@@ -202,24 +210,31 @@ class FilesystemPostPublisher implements PostPublisherInterface
 
         // Get the assets to publish from the source filesystem
         $assetsToPublishPath = ($site ? $site . DIRECTORY_SEPARATOR : '') . 'assets';
-        $files = $this->sourceFilesystem->listContents($assetsToPublishPath, true);
+        $sourceFiles = $this->sourceFilesystem->listContents($assetsToPublishPath, true);
 
         // Publish each asset file
-        foreach ($files as $file) {
-            if ($file['type'] == 'dir') {
+        foreach ($sourceFiles as $sourceFile) {
+            if ($sourceFile['type'] == 'dir') {
                 continue;
             }
 
             // Determine the file path of the asset
-            $fileName = 'assets' . str_replace($assetsToPublishPath, "", $file['dirname']) . DIRECTORY_SEPARATOR . $file['basename'];
+            $destinationFileName = 'assets' . str_replace($assetsToPublishPath, "", $sourceFile['dirname']) . DIRECTORY_SEPARATOR . $sourceFile['basename'];
+
+            // If the file has been already been published, skip it
+            if ($this->isFileAlreadyPublished($destinationFileName, $sourceFile['timestamp'], $destinationFilesystem)) {
+                // The asset was previously published to the destination filesystem, so flag it as published
+                $publishedFiles[] = $destinationFileName;
+                continue;
+            }
 
             // Publish the asset to the destination filesystem
-            if (false == $destinationFilesystem->put($fileName, $this->sourceFilesystem->read($file['path']))) {
-                throw new Exception("Unable to publish asset: $fileName");
+            if (false == $destinationFilesystem->put($destinationFileName, $this->sourceFilesystem->read($sourceFile['path']))) {
+                throw new Exception("Unable to publish asset: $destinationFileName");
             }
 
             // Add the asset to the list of published files
-            $publishedFiles[] = $fileName;
+            $publishedFiles[] = $destinationFileName;
         }
 
         return $publishedFiles;
@@ -319,5 +334,75 @@ class FilesystemPostPublisher implements PostPublisherInterface
             } catch (FileNotFoundException $e) {
             }
         }
+    }
+
+    /**
+     * Checks if the Post has already been published to the destination filesystem. It returns true if the destination
+     * file has a more recent updated timestamp than the timestamp of the Post -- this means the Post file has already been
+     * published (or modified manually, but ignoring this case). It returns false if the destination file does not exist
+     * or the updated at timestamp of the Post entity is more recent -- this means the Post should be published.
+     *
+     * @param Post $post
+     * @param FilesystemInterface $destinationFilesystem
+     * @return bool
+     * @throws FileNotFoundException
+     */
+    private function isPostAlreadyPublished(Post $post, FilesystemInterface $destinationFilesystem)
+    {
+        // Check if the file exists
+        if (!$destinationFilesystem->has($post->humanReadableUrl)) {
+            return false;
+        }
+
+        // Get the updated at timestamp of the Post's published file
+        $destinationUpdatedAtTs = $destinationFilesystem->getTimestamp($post->humanReadableUrl);
+        $destinationUpdatedAt = new DateTime("@$destinationUpdatedAtTs");
+
+        // Get the last update time of the Post
+        $postUpdatedAt = $post->updatedAt;
+
+        // If the destination file is more recent than the last Post update, the Post has already been published
+        if ($destinationUpdatedAt >= $postUpdatedAt) {
+            return true;
+        }
+
+        // The timestamp of the Post is more recent than the destination file, so the Post has not yet been published to the destination file
+        return false;
+    }
+
+    /**
+     * For a given file to be published, compares the updated at timestamp of the file from the source filesystem
+     * with the updated at timestamp of the file on the destination filesystem. It returns true when the destination
+     * file is more recent than the source file -- this means the file was already published (or modified manually, but
+     * ignoring this case). It returns false if the source file is more recent than the destination file -- this means
+     * the file needs to be published.
+     *
+     * @param string $destinationFileName
+     * @param string $sourceUpdatedAtTs
+     * @param FilesystemInterface $destinationFilesystem
+     * @return bool
+     * @throws FileNotFoundException
+     */
+    private function isFileAlreadyPublished(string $destinationFileName, string $sourceUpdatedAtTs, FilesystemInterface $destinationFilesystem)
+    {
+        // Check if the file exists
+        if (!$destinationFilesystem->has($destinationFileName)) {
+            return false;
+        }
+
+        // Get the last update time of the source file
+        $sourceUpdatedAt = new DateTime("@$sourceUpdatedAtTs");
+
+        // Get the last update time of the destination file
+        $destinationUpdatedAtTs = $destinationFilesystem->getTimestamp($destinationFileName);
+        $destinationUpdatedAt = new DateTime("@$destinationUpdatedAtTs");
+
+        // If the destination file has been updated more recently, then this asset has already been published
+        if ($destinationUpdatedAt >= $sourceUpdatedAt) {
+            return true;
+        }
+
+        // The destination target asset has not yet been published
+        return false;
     }
 }

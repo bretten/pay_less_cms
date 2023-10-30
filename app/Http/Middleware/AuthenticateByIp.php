@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App;
 use Closure;
 use Illuminate\Foundation\Application;
 
@@ -30,7 +31,7 @@ class AuthenticateByIp
      */
     public function handle($request, Closure $next)
     {
-        if (!in_array($request->ip(), $this->trustedIps)) {
+        if (\App::environment('production') && !in_array($request->ip(), $this->trustedIps)) {
             return response(null, 403);
         }
         return $next($request);

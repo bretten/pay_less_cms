@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  paylesscms-db:
+    hostname: paylesscms-db
+    #    image: postgres:16
+    image: paylesscms/php/db # Building an image so that we can run a script at the entrypoint
+    build:
+      context: ./
+      dockerfile: db.Dockerfile
+    ports:
+      - "54321:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_DB=pay_less_cms
+    volumes:
+      - pgsql_db:/var/lib/postgresql/data
+  paylesscms-app:
+    hostname: paylesscms-app
+    image: paylesscms/php/app
+    build:
+      context: ./
+      dockerfile: app.Dockerfile
+    tty: true # Keep the container running as long as no CMD is specified in the corresponding Dockerfile
+    ports:
+      - '8001:80'
+    environment:
+      - APP_ENV=local
+      - DB_CONNECTION=pgsql
+      - DB_HOST=paylesscms-db
+      - DB_PORT=5432
+      - DB_DATABASE=pay_less_cms
+      - DB_USERNAME=admin
+      - DB_PASSWORD=password123
+      - DB_PGSQL_SCHEMA=pay_less_cms_app
+    depends_on:
+      - paylesscms-db
+
+volumes:
+  pgsql_db:

@@ -81,7 +81,9 @@ class PostController extends Controller
      */
     public function create()
     {
-        return response()->view('posts.create');
+        $sites = $this->siteRepository->getAll();
+
+        return response()->view('posts.create', ['sites' => $sites]);
     }
 
     /**
@@ -149,8 +151,9 @@ class PostController extends Controller
     public function edit($id)
     {
         $post = $this->repository->getById($id);
+        $sites = $this->siteRepository->getAll();
 
-        return response()->view('posts.edit', ['post' => $post]);
+        return response()->view('posts.edit', ['post' => $post, 'sites' => $sites]);
     }
 
     /**

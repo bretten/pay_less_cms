@@ -16,7 +16,11 @@
 
             <div class="form-group">
                 <label for="post-site">Site</label>
-                <input type="text" class="form-control" id="post-site" name="site" value="{{ $post->site }}">
+                <select class="form-control" aria-label="Site" id="post-site" name="site" >
+                    @foreach ($sites as $site)
+                        <option value="{{ $site->domainName }}" {{ $post->site == $site->domainName ? " selected" : "" }}>{{ $site->domainName }}</option>
+                    @endforeach
+                </select>
             </div>
 
             <div class="form-group">

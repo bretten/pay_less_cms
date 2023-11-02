@@ -1,62 +1,115 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Table of contents
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+* [What is it?](#what-is-it)
+* [What does the app stack look like?](#what-does-the-app-stack-look-like)
+* [How do you run it locally?](#how-do-you-run-it-locally)
+    * [How do you stop it?](#how-do-you-stop-it)
+    * [What ports are the containers mapped to?](#what-ports-are-the-containers-mapped-to)
+* [Using the app](#using-the-app)
+    * [How do I configure the app?](#how-do-i-configure-the-app)
+    * [Authentication and Authorization](#authentication-and-authorization)
+    * [How do I add content?](#how-do-i-add-content)
+    * [What are the Post fields?](#what-are-the-post-fields)
+    * [How do I publish?](#how-do-i-publish)
+      * [Local publishing](#local-publishing)
+      * [AWS S3 Publishing](#aws-s3-publishing)
 
-## About Laravel
+# What is it?
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+A developer-oriented CMS meant to rapidly publish content to multiple sites.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+# What does the app stack look like?
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* Laravel 8 Backend
+    * Site management
+      * Determines which sites posts will be published to
+    * Posts
+      * Option between plain text, JSON, and HTML
+* PostgreSQL database
+    * Stores posts and sites
 
-## Learning Laravel
+# How do you run it locally?
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Running it requires docker compose.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+From the repository root, run:
 
-## Laravel Sponsors
+```
+docker-compose build
+docker-compose up -d
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+### How do you stop it?
 
-### Premium Partners
+```
+docker-compose down --volume
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
+### What ports are the containers mapped to?
 
-## Contributing
+* `8001` - Laravel backend
+* `54321` - PostgreSQL
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Using the app
 
-## Code of Conduct
+The front end will be available at: http://localhost:8001.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## How do I configure the app?
+There is a file at the root of the project with environment variables. Running the project via docker-compose will create this file automatically.
+It will automatically override any matching system environment variables.
 
-## Security Vulnerabilities
+The file is: `.env`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Authentication and Authorization
 
-## License
+Users are not required for this demo, but you may restrict access by IP.
+In order to restrict access by IP, set the environment variable `TRUSTED_IPS` with a CSV of IPs to allow.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Example:
+```
+export TRUSTED_IPS=192.168.0.1,192.168.0.2
+```
+
+## How do I add content?
+
+In order to create a Post, you must first create a Site. Go to the site section and create a site with a domain name and identifying title.
+
+After creating a Site, you can then create a Post for that Site.
+
+## What are the Post fields?
+
+```
+Site - The site that the post belongs to
+Title - The title of the post
+Content - The body of the post
+Human Readable URL - The URL that the post will be available at on the Site
+```
+
+## How do I publish?
+
+By default, the application will publish content to the local disk
+
+### Local publishing
+
+Simply click the `Publish` button on the site or run the command:
+
+`php /var/www/html/pay_less_cms/artisan posts:publish`
+
+The files will be available at:
+
+`/var/www/html/pay_less_cms/storage/app/published/`
+
+### AWS S3 Publishing
+You can alternatively publish to AWS S3. First, indicate that S3 will be the publish target by setting the environment variable:
+```
+FILESYSTEM_PUBLISHER_DRIVER=s3
+```
+
+In order to authenticate to S3, you must set the following environment variables.
+
+```
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=
+```
